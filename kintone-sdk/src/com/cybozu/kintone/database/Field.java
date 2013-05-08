@@ -26,7 +26,7 @@ public class Field {
 	private Object value;
 
 	public Field(String name, FieldType type, Object value) {
-		this.name = name;
+		this.name = name.toLowerCase();
 		this.fieldType = type;
 		this.value = value;
 	}
@@ -34,7 +34,7 @@ public class Field {
 		return name;
 	}
 	public void setName(String name) {
-		this.name = name;
+		this.name = name.toLowerCase();
 	}
 	public FieldType getFieldType() {
 		return fieldType;

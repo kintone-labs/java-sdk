@@ -50,7 +50,7 @@ public class SdkSample {
 		}
 		
 		// add headers
-		db.addHeader("X-NewHeader", "brah");
+		db.addHeader("X-New-Header", "brah");
 		
 		String query = "code = 2342";
 		
@@ -63,8 +63,8 @@ public class SdkSample {
 		}
 		while(rs.next()) {
 			long code = rs.getLong("code");
-			String created = rs.getString("ì¬“ú");
-			UserDto creator = rs.getUser("ì¬Ò");
+			String created = rs.getString("creator");
+			UserDto creator = rs.getUser("created_time");
             String name = rs.getString("name");
             
             System.out.println(code + "," + created + "," + name + "," + creator.getName());

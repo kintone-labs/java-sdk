@@ -42,14 +42,14 @@ public class Record {
 	}
 	
 	public Field getField(String name) {
-		return fields.get(name);
+		return fields.get(name.toLowerCase());
 	}
 	
 	public void addField(String name, Field field){
 		if (field.getFieldType() == FieldType.RECORD_NUMBER) {
 			setId(field.getAsLong());
 		} else {
-			fields.put(name, field);
+			fields.put(name.toLowerCase(), field);
 		}
 	}
 	
@@ -62,33 +62,33 @@ public class Record {
 	}
 	
 	public boolean hasField(String name) {
-		return fields.containsKey(name);
+		return fields.containsKey(name.toLowerCase());
 	}
 	
 	public long getLong(String name) {
 		
-		return fields.get(name).getAsLong();
+		return fields.get(name.toLowerCase()).getAsLong();
 	}
 	
 	public String getString(String name) {
 		
-		return fields.get(name).getAsString();
+		return fields.get(name.toLowerCase()).getAsString();
 	}
 	
 	public List<String> getStrings(String name) {
-		return fields.get(name).getAsStringList();
+		return fields.get(name.toLowerCase()).getAsStringList();
 	}
 	public List<FileDto> getFiles(String name) {
 		
-		return fields.get(name).getAsFileList();
+		return fields.get(name.toLowerCase()).getAsFileList();
 	}
 	
 	public UserDto getUser(String name) {
-		return fields.get(name).getAsUserInfo();
+		return fields.get(name.toLowerCase()).getAsUserInfo();
 	}
 	
 	public List<UserDto> getUsers(String name) {
-		return fields.get(name).getAsUserList();
+		return fields.get(name.toLowerCase()).getAsUserList();
 	}
 	public void setString(String name, String value) {
 		Field field = new Field(name, FieldType.SINGLE_LINE_TEXT, value);

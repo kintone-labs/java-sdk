@@ -112,7 +112,7 @@ public class SdkSample {
 		// upload file
 		String fileKey = null;
 		try {
-			File file = new File("c:\\tmp\\nozomi.jpg");
+			File file = new File("c:\\tmp\\upload.jpg");
 			fileKey = db.uploadFile("image/jpeg", file);
 		} catch (DBException e) {
 			e.printStackTrace();

@@ -151,6 +151,16 @@ public class ResultSet {
 	}
 	
 	/**
+	 * Get field value as user object array
+	 * @param name field name
+	 * @return a user object
+	 */
+	public UserDto[] getUsers(String name) {
+		return current.getUsers(name).toArray(new UserDto[0]);
+	}
+	
+	
+	/**
 	 * Get field value as file object
 	 * @param name field name
 	 * @return an array of file objects

@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Authenticator;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
@@ -64,6 +65,8 @@ public class Connection {
 	private final String JSON_CONTENT = "application/json";
 	private final String API_PREFIX = "/k/v1/";
 	private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
+	private final String USER_AGENT_KEY = "User-Agent";
+	private final String USER_AGENT_VALUE = "kintone-SDK 1.0";
 	
 	private final String SSL_KEY_STORE = "javax.net.ssl.keyStore";
 	private final String SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
@@ -71,6 +74,7 @@ public class Connection {
 	private String domain;
 	private String auth;
 	private Proxy proxy;
+	private String userAgent = USER_AGENT_VALUE;
 	private boolean trustAllHosts;  // for debug
 	private boolean useClientCert;
 	private HashMap<String, String> headers = new HashMap<String, String>();
@@ -152,7 +156,11 @@ public class Connection {
 	 * @param value header value
 	 */
 	public void addHeader(String name, String value) {
-		headers.put(name, value);
+		if (name.equalsIgnoreCase(USER_AGENT_KEY)) {
+			userAgent += " " + value;
+		} else {
+			headers.put(name, value);
+		}
 	}
 
 	/**
@@ -261,6 +269,14 @@ public class Connection {
 		return request(method, api, body, null);
 	}
 	
+	private void setHTTPHeaders(HttpURLConnection conn) {
+		conn.setRequestProperty(AUTH_HEADER, this.auth);
+		conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
+		for (String header: this.headers.keySet()) {
+			conn.setRequestProperty(header, this.headers.get(header));
+		}
+	}
+	
 	/**
 	 * Request to kintone
 	 * @param method GET, POST, PUT or DELETE
@@ -297,8 +313,8 @@ public class Connection {
 				certificate(conn);
 			}
 			
-			conn.setRequestProperty(AUTH_HEADER, this.auth);
-
+			setHTTPHeaders(conn);
+			
 			conn.setRequestMethod(method);
 		} catch (IOException e) {
 			throw new DBException("can not open connection");
@@ -392,8 +408,8 @@ public class Connection {
 				certificate(conn);
 			}
 			
-			conn.setRequestProperty(AUTH_HEADER, this.auth);
-
+			setHTTPHeaders(conn);
+			
 			conn.setRequestMethod("POST");
 		} catch (Exception e) {
 			throw new DBException("invalid url");

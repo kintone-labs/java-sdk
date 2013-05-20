@@ -14,10 +14,17 @@
 
 package com.cybozu.kintone.database;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
+
+import com.cybozu.kintone.database.exception.DBTypeMismatchException;
 
 /**
  * A record object represents a row of the kintone application.
@@ -25,6 +32,8 @@ import java.util.Set;
  *
  */
 public class Record {
+	static public final String DATE_PATTERN ="yyyy-MM-dd'T'HH:mm:ss'Z'";
+
 	private long id;
 	
 	private HashMap<String, Field> fields = new HashMap<String, Field>();
@@ -47,7 +56,11 @@ public class Record {
 	
 	public void addField(String name, Field field){
 		if (field.getFieldType() == FieldType.RECORD_NUMBER) {
-			setId(field.getAsLong());
+			try {
+				setId(field.getAsLong());
+			} catch (DBTypeMismatchException e) {
+				e.printStackTrace();
+			}
 		} else {
 			fields.put(name.toLowerCase(), field);
 		}
@@ -65,30 +78,42 @@ public class Record {
 		return fields.containsKey(name.toLowerCase());
 	}
 	
-	public long getLong(String name) {
+	public long getLong(String name) throws DBTypeMismatchException {
 		
 		return fields.get(name.toLowerCase()).getAsLong();
 	}
 	
-	public String getString(String name) {
+	public String getString(String name) throws DBTypeMismatchException {
 		
 		return fields.get(name.toLowerCase()).getAsString();
 	}
 	
-	public List<String> getStrings(String name) {
+	public List<String> getStrings(String name) throws DBTypeMismatchException {
 		return fields.get(name.toLowerCase()).getAsStringList();
 	}
-	public List<FileDto> getFiles(String name) {
+	public List<FileDto> getFiles(String name) throws DBTypeMismatchException {
 		
 		return fields.get(name.toLowerCase()).getAsFileList();
 	}
 	
-	public UserDto getUser(String name) {
+	public UserDto getUser(String name) throws DBTypeMismatchException {
 		return fields.get(name.toLowerCase()).getAsUserInfo();
 	}
 	
-	public List<UserDto> getUsers(String name) {
+	public List<UserDto> getUsers(String name) throws DBTypeMismatchException {
 		return fields.get(name.toLowerCase()).getAsUserList();
+	}
+	
+	
+	public Date getDate(String name) throws DBTypeMismatchException {
+		String strDate = fields.get(name.toLowerCase()).getAsString();
+		try {
+			DateFormat df = new SimpleDateFormat(DATE_PATTERN);
+			df.setTimeZone(TimeZone.getTimeZone("UTC"));
+			return df.parse(strDate);
+		} catch (ParseException e) {
+			throw new DBTypeMismatchException();
+		}
 	}
 	public void setString(String name, String value) {
 		Field field = new Field(name, FieldType.SINGLE_LINE_TEXT, value);
@@ -129,5 +154,12 @@ public class Record {
 		}
 		Field field = new Field(name, FieldType.MULTI_SELECT, list);
 		addField(name, field);
+	}
+	
+	public void setDate(String name, Date date) {
+		DateFormat df = new SimpleDateFormat(DATE_PATTERN);
+		df.setTimeZone(TimeZone.getTimeZone("UTC"));
+		String strDate = df.format(date);
+		setString(name, strDate);
 	}
 }

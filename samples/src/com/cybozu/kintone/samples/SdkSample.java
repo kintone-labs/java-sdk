@@ -17,13 +17,14 @@ package com.cybozu.kintone.samples;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import com.cybozu.kintone.database.Connection;
-import com.cybozu.kintone.database.DBException;
 import com.cybozu.kintone.database.FileDto;
 import com.cybozu.kintone.database.Record;
 import com.cybozu.kintone.database.ResultSet;
 import com.cybozu.kintone.database.UserDto;
+import com.cybozu.kintone.database.exception.DBException;
 
 public class SdkSample {
 
@@ -62,26 +63,25 @@ public class SdkSample {
 			e1.printStackTrace();
 		}
 		while(rs.next()) {
-			long code = rs.getLong("code");
-			String created = rs.getString("creator");
-			UserDto creator = rs.getUser("created_time");
-            String name = rs.getString("name");
-            
-            System.out.println(code + "," + created + "," + name + "," + creator.getName());
-            
-            // download file
-            FileDto[] files = rs.getFiles("file");
-            if (files.length > 0) {
-	            try {
-					try {
-						rs.downloadFile("file", 0);
-					} catch (DBException e) {
-						e.printStackTrace();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-            }
+			try {
+				long recNo = rs.getId();
+				long code = rs.getLong("code");
+				Date created = rs.getDate("created_time");
+				UserDto creator = rs.getUser("creator");
+	            String name = rs.getString("name");
+	            System.out.println(recNo + code + "," + created + "," + name + "," + creator.getName());
+	            
+	            // download file
+	            FileDto[] files = rs.getFiles("file");
+	            if (files.length > 0) {
+	            	rs.downloadFile("file", 0);
+	            }
+			} catch (DBException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
 
 		ArrayList<Record> list = new ArrayList<Record>();

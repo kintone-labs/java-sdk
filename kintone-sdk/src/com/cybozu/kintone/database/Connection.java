@@ -53,6 +53,10 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import com.cybozu.kintone.database.exception.DBException;
+import com.cybozu.kintone.database.exception.DBNotFoundException;
+import com.cybozu.kintone.database.exception.ParseException;
+
 import sun.misc.BASE64Encoder;
 
 /**
@@ -366,6 +370,7 @@ public class Connection {
 				while (-1 != (n = is.read(buffer))) {
 					os.write(buffer, 0, n);
 				}
+				os.close();
 			} else {
 				response = streamToString(is);
 			}
@@ -444,6 +449,7 @@ public class Connection {
 			while (-1 != (n = isFile.read(buffer))) {
 				os.write(buffer, 0, n);
 			}
+			isFile.close();
 			ps.print("\r\n--" + BOUNDARY + "--\r\n");
 			ps.close();
 		} catch (IOException e) {

@@ -16,6 +16,8 @@ package com.cybozu.kintone.database;
 
 import java.util.List;
 
+import com.cybozu.kintone.database.exception.DBTypeMismatchException;
+
 /**
  * A field object stores the each value of the variable field types.
  *
@@ -51,26 +53,44 @@ public class Field {
 	public void setValue(Object value) {
 		this.value = value;
 	}
-	public String getAsString() {
-		return (String)value;
+	public String getAsString() throws DBTypeMismatchException {
+		if (value instanceof String) {
+			return (String)value;
+		}
+		throw new DBTypeMismatchException();		
 	}
-	public long getAsLong() {
-		return isEmpty()? 0: (Long)value;
+	public long getAsLong() throws DBTypeMismatchException {
+		if (value instanceof Long) {
+			return isEmpty()? 0: (Long)value;
+		}
+		throw new DBTypeMismatchException();
 	}
 	@SuppressWarnings("unchecked")
-	public List<String> getAsStringList() {
-		return (List<String>)value;
+	public List<String> getAsStringList() throws DBTypeMismatchException {
+		if (value instanceof List) {
+			return (List<String>)value;
+		}
+		throw new DBTypeMismatchException();
 	}
-	public UserDto getAsUserInfo() {
-		return (UserDto)value;
+	public UserDto getAsUserInfo() throws DBTypeMismatchException {
+		if (value instanceof UserDto) {
+			return (UserDto)value;
+		}
+		throw new DBTypeMismatchException();
 	}
 	@SuppressWarnings("unchecked")
-	public List<FileDto> getAsFileList() {
-		return (List<FileDto>)value;
+	public List<FileDto> getAsFileList() throws DBTypeMismatchException {
+		if (value instanceof List) {
+			return (List<FileDto>)value;
+		}
+		throw new DBTypeMismatchException();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public List<UserDto> getAsUserList() {
-		return (List<UserDto>)value;
+	public List<UserDto> getAsUserList() throws DBTypeMismatchException {
+		if (value instanceof List) {
+			return (List<UserDto>)value;
+		}
+		throw new DBTypeMismatchException();
 	}
 }

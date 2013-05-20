@@ -36,8 +36,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
+import com.cybozu.kintone.database.exception.DBTypeMismatchException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
@@ -198,7 +200,7 @@ public class JsonParser {
 		return gson.fromJson(element, collectionType);
 	}
 	
-	private void writeField(JsonWriter writer, Field field) throws IOException {
+	private void writeField(JsonWriter writer, Field field) throws IOException, DBTypeMismatchException {
 		writer.name(field.getName());
 		writer.beginObject();
 		writer.name("value");
@@ -285,7 +287,11 @@ public class JsonParser {
         	writer.beginObject();
         	for (String fieldName: record.getFieldNames()) {
         		Field field = record.getField(fieldName);
-        		writeField(writer, field);
+        		try {
+					writeField(writer, field);
+				} catch (DBTypeMismatchException e) {
+					e.printStackTrace();
+				}
         	}
         	writer.endObject();
         }
@@ -335,7 +341,11 @@ public class JsonParser {
         	writer.beginObject();
         	for (String fieldName: record.getFieldNames()) {
         		Field field = record.getField(fieldName);
-        		writeField(writer, field);
+        		try {
+					writeField(writer, field);
+				} catch (DBTypeMismatchException e) {
+					e.printStackTrace();
+				}
         	}
         	writer.endObject();
         	writer.endObject();
@@ -356,6 +366,7 @@ public class JsonParser {
 		reader.nextName();
 		String fileKey = reader.nextString();
 		reader.endObject();
+		reader.close();
 		return fileKey;
 	}
 }

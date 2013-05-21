@@ -344,7 +344,7 @@ public class Connection {
 			try {
 				os = conn.getOutputStream();
 			} catch (IOException e) {
-				throw new DBException("an error occured while sending data");
+				throw new DBException("an error occurred while sending data");
 			}
 			PrintStream ps = new PrintStream(os);
 			ps.print(body);
@@ -376,7 +376,7 @@ public class Connection {
 			}
 			is.close();
 		} catch (IOException e) {
-			throw new DBException("an error occured while receiving data");
+			throw new DBException("an error occurred while receiving data");
 		}
 
 		//System.out.println(response);
@@ -453,7 +453,7 @@ public class Connection {
 			ps.print("\r\n--" + BOUNDARY + "--\r\n");
 			ps.close();
 		} catch (IOException e) {
-			throw new DBException("an error occured while sending data");
+			throw new DBException("an error occurred while sending data");
 		}
 		
 		// receive response
@@ -471,7 +471,7 @@ public class Connection {
 			response = streamToString(is);
 			is.close();
 		} catch (IOException e) {
-			throw new DBException("an error occured while receiving data");
+			throw new DBException("an error occurred while receiving data");
 		}
 
 		JsonParser parser = new JsonParser();

@@ -97,7 +97,6 @@ public class SdkSample {
 	            FileDto[] files = rs.getFiles("file");
 	            if (files.length > 0) {
 	            	File f = rs.downloadFile("file", 0);
-	            	System.out.println(f.getAbsolutePath());
 	            	f.renameTo(new File("c:\\tmp\\" + files[0].getName()));
 	            }
 			} catch (DBException e1) {

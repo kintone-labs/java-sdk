@@ -33,7 +33,7 @@ public class SdkSample {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// set domain, login name and password
+		// set domain, application id, login name and password
 		String domain = args[0];
 		int app = Integer.valueOf(args[1]);
 		String login = args[2];
@@ -43,7 +43,7 @@ public class SdkSample {
 		Connection db;
 		try {
 			db = new Connection(domain, login, password);
-			// db.setClientCert("foobaa.pfx", "password");
+			// db.setClientCert("foobar.pfx", "password");
 			// db.setProxy("127.0.0.1", 8888); // for fiddler2
 			// db.setTrustAllHosts(true);
 		} catch (Exception e) {
@@ -53,7 +53,7 @@ public class SdkSample {
 		// add headers
 		db.addHeader("X-New-Header", "brah");
 		
-		String query = "code = 2342";
+		String query = "code = 456";
 		
 		// select records
 		ResultSet rs = null;
@@ -69,12 +69,36 @@ public class SdkSample {
 				Date created = rs.getDate("created_time");
 				UserDto creator = rs.getUser("creator");
 	            String name = rs.getString("name");
-	            System.out.println(recNo + code + "," + created + "," + name + "," + creator.getName());
+	            String[] strings = rs.getStrings("checkbox");
+	            
+	            StringBuilder sb = new StringBuilder();
+	            sb.append("no:");
+	            sb.append(recNo);
+	            sb.append(",code:");
+	            sb.append(code);
+	            sb.append(",created:");
+	            sb.append(created);
+	            sb.append(",name:");
+	            sb.append(name);
+	            sb.append(",check:");
+	            if (strings.length > 0) {
+	            	for (String s: strings) {
+	            		sb.append("[");
+	            		sb.append(s);
+	            		sb.append("]");
+	            	}
+				}
+	            sb.append(",creator:");
+	            sb.append(creator.getName());
+	            
+	            System.out.println(sb.toString());
 	            
 	            // download file
 	            FileDto[] files = rs.getFiles("file");
 	            if (files.length > 0) {
-	            	rs.downloadFile("file", 0);
+	            	File f = rs.downloadFile("file", 0);
+	            	System.out.println(f.getAbsolutePath());
+	            	f.renameTo(new File("c:\\tmp\\" + files[0].getName()));
 	            }
 			} catch (DBException e1) {
 				// TODO Auto-generated catch block
@@ -132,7 +156,7 @@ public class SdkSample {
 		ArrayList<Long> ids = new ArrayList<Long>();
 		ids.add(Long.valueOf(1));
 		try {
-			db.update(app, ids.toArray(new Long[0]), record);
+			db.update(app, ids, record);
 		} catch (DBException e1) {
 			e1.printStackTrace();
 		}
@@ -153,7 +177,7 @@ public class SdkSample {
 
 		// delete records
 		try {
-			db.delete(app, ids.toArray(new Long[0]));
+			db.delete(app, ids);
 		} catch (DBException e1) {
 			e1.printStackTrace();
 		}

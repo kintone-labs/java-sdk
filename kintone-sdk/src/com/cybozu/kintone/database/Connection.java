@@ -606,7 +606,10 @@ public class Connection {
 		}
 	}
 
-
+	public void update(long app, List<Long> ids, Record record) throws DBException {
+		update(app, ids.toArray(new Long[0]), record);
+	}
+	
 	/**
 	 * Update records
 	 * @param app application id
@@ -664,6 +667,11 @@ public class Connection {
 		}
 	}
 
+	public void delete(long app, List<Long> ids) throws DBException {
+		delete(app, ids.toArray(new Long[0]));
+	}
+
+	
 	/**
 	 * Delete records
 	 * @param app application id

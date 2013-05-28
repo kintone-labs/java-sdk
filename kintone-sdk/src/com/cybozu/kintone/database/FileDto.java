@@ -16,72 +16,86 @@ package com.cybozu.kintone.database;
 
 /**
  * A data transfer object represents the file.
-*/
+ */
 public class FileDto {
-	private String contentType;
-	private String url;
-	private String fileKey;
-	private String name;
-	private long size;
-	
-	/**
-	 * @return content type
-	 */
-	public String getContentType() {
-		return contentType;
-	}
-	/**
-	 * @param contentType content type
-	 */
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
-	}
-	/**
-	 * @return file url
-	 */
-	public String getUrl() {
-		return url;
-	}
-	/**
-	 * @param url file url
-	 */
-	public void setUrl(String url) {
-		this.url = url;
-	}
-	/**
-	 * @return file key
-	 */
-	public String getFileKey() {
-		return fileKey;
-	}
-	/**
-	 * @param fileKey file key
-	 */
-	public void setFileKey(String fileKey) {
-		this.fileKey = fileKey;
-	}
-	/**
-	 * @return file name
-	 */
-	public String getName() {
-		return name;
-	}
-	/**
-	 * @param name file name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-	/**
-	 * @return file size
-	 */
-	public long getSize() {
-		return size;
-	}
-	/**
-	 * @param size file size
-	 */
-	public void setSize(long size) {
-		this.size = size;
-	}
+    private String contentType;
+    private String url;
+    private String fileKey;
+    private String name;
+    private long size;
+
+    /**
+     * @return content type
+     */
+    public String getContentType() {
+        return contentType;
+    }
+
+    /**
+     * @param contentType
+     *            content type
+     */
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    /**
+     * @return file url
+     */
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     * @param url
+     *            file url
+     */
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
+     * @return file key
+     */
+    public String getFileKey() {
+        return fileKey;
+    }
+
+    /**
+     * @param fileKey
+     *            file key
+     */
+    public void setFileKey(String fileKey) {
+        this.fileKey = fileKey;
+    }
+
+    /**
+     * @return file name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name
+     *            file name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return file size
+     */
+    public long getSize() {
+        return size;
+    }
+
+    /**
+     * @param size
+     *            file size
+     */
+    public void setSize(long size) {
+        this.size = size;
+    }
 }

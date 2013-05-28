@@ -16,40 +16,17 @@ package com.cybozu.kintone.database;
 
 /**
  * Defines the field types which kintone official api provides.
- *
+ * 
  */
 public enum FieldType {
-	
-	SINGLE_LINE_TEXT,
-	NUMBER,
-	CALC,
-	MULTI_LINE_TEXT,
-	RICH_TEXT,
-	CHECK_BOX,
-	RADIO_BUTTON,
-	DROP_DOWN,
-	MULTI_SELECT,
-	FILE,
-	DATE,
-	TIME,
-	DATETIME,
-	USER_SELECT,
-	LINK,
-	CATEGORY,
-	STATUS,
-	RECORD_NUMBER,
-	CREATOR,
-	CREATED_TIME,
-	MODIFIER,
-	UPDATED_TIME,
-	STATUS_ASSIGNEE,
-	SUBTABLE;
-	
-	public static FieldType getEnum(String str) {
-		FieldType[] values = FieldType.values();
 
-        for(FieldType value : values) {
-            if (str.equals(value.toString())){
+    SINGLE_LINE_TEXT, NUMBER, CALC, MULTI_LINE_TEXT, RICH_TEXT, CHECK_BOX, RADIO_BUTTON, DROP_DOWN, MULTI_SELECT, FILE, DATE, TIME, DATETIME, USER_SELECT, LINK, CATEGORY, STATUS, RECORD_NUMBER, CREATOR, CREATED_TIME, MODIFIER, UPDATED_TIME, STATUS_ASSIGNEE, SUBTABLE;
+
+    public static FieldType getEnum(String str) {
+        FieldType[] values = FieldType.values();
+
+        for (FieldType value : values) {
+            if (str.equals(value.toString())) {
                 return value;
             }
         }

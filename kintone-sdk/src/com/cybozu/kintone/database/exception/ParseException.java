@@ -15,21 +15,22 @@
 package com.cybozu.kintone.database.exception;
 
 public class ParseException extends RuntimeException {
-	/**
-	 * An exception that provides information on handling json data.
-	 * Usually the exception will be caused by a bug.
-	 */
+    /**
+     * An exception that provides information on handling json data. Usually the
+     * exception will be caused by a bug.
+     */
 
-	private static final long serialVersionUID = -1271708513872349243L;
+    private static final long serialVersionUID = -1271708513872349243L;
 
-	public ParseException(Throwable cause) {
-		super(cause);
-	}
-	
-	public ParseException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	public ParseException(String message) {
-		super(message);
-	}
+    public ParseException(Throwable cause) {
+        super(cause);
+    }
+
+    public ParseException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ParseException(String message) {
+        super(message);
+    }
 }

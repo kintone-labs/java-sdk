@@ -14,38 +14,42 @@
 
 package com.cybozu.kintone.database;
 
-
 /**
- * A data transfer object represents the user data whose field type is user-select, creator or modifier.
+ * A data transfer object represents the user data whose field type is
+ * user-select, creator or modifier.
  */
 public class UserDto {
-	private String name;
-	private String code;
-	/**
-	 * @return user name
-	 */
-	public String getName() {
-		return name;
-	}
-	/**
-	 * @param name user name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	/**
-	 * @return user code
-	 */
-	public String getCode() {
-		return code;
-	}
-	/**
-	 * @param code user code
-	 */
-	public void setCode(String code) {
-		this.code = code;
-	}
-	
-	
+    private String name;
+    private String code;
+
+    /**
+     * @return user name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name
+     *            user name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return user code
+     */
+    public String getCode() {
+        return code;
+    }
+
+    /**
+     * @param code
+     *            user code
+     */
+    public void setCode(String code) {
+        this.code = code;
+    }
+
 }

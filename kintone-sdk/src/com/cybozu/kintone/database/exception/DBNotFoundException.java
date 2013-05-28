@@ -14,14 +14,13 @@
 
 package com.cybozu.kintone.database.exception;
 
-
 public class DBNotFoundException extends DBException {
-	/**
-	 * An exception which occurs when 404 not found
-	 */
-	private static final long serialVersionUID = 3706182459275076255L;
+    /**
+     * An exception which occurs when 404 not found
+     */
+    private static final long serialVersionUID = 3706182459275076255L;
 
-	public DBNotFoundException(String message) {
-		super(message);
-	}
+    public DBNotFoundException(String message) {
+        super(message);
+    }
 }

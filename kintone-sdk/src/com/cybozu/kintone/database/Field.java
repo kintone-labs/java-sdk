@@ -16,81 +16,93 @@ package com.cybozu.kintone.database;
 
 import java.util.List;
 
-import com.cybozu.kintone.database.exception.DBTypeMismatchException;
+import com.cybozu.kintone.database.exception.TypeMismatchException;
 
 /**
  * A field object stores the each value of the variable field types.
- *
+ * 
  */
 public class Field {
-	private String name;
-	private FieldType fieldType;
-	private Object value;
+    private String name;
+    private FieldType fieldType;
+    private Object value;
 
-	public Field(String name, FieldType type, Object value) {
-		this.name = name.toLowerCase();
-		this.fieldType = type;
-		this.value = value;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name.toLowerCase();
-	}
-	public FieldType getFieldType() {
-		return fieldType;
-	}
-	public void setFieldType(FieldType fieldType) {
-		this.fieldType = fieldType;
-	}
-	public Object getValue() {
-		return value;
-	}
-	public boolean isEmpty() {
-		return value == null;
-	}
-	public void setValue(Object value) {
-		this.value = value;
-	}
-	public String getAsString() throws DBTypeMismatchException {
-		if (value instanceof String) {
-			return (String)value;
-		}
-		throw new DBTypeMismatchException();		
-	}
-	public long getAsLong() throws DBTypeMismatchException {
-		if (value instanceof Long) {
-			return isEmpty()? 0: (Long)value;
-		}
-		throw new DBTypeMismatchException();
-	}
-	@SuppressWarnings("unchecked")
-	public List<String> getAsStringList() throws DBTypeMismatchException {
-		if (value instanceof List) {
-			return (List<String>)value;
-		}
-		throw new DBTypeMismatchException();
-	}
-	public UserDto getAsUserInfo() throws DBTypeMismatchException {
-		if (value instanceof UserDto) {
-			return (UserDto)value;
-		}
-		throw new DBTypeMismatchException();
-	}
-	@SuppressWarnings("unchecked")
-	public List<FileDto> getAsFileList() throws DBTypeMismatchException {
-		if (value instanceof List) {
-			return (List<FileDto>)value;
-		}
-		throw new DBTypeMismatchException();
-	}
-	
-	@SuppressWarnings("unchecked")
-	public List<UserDto> getAsUserList() throws DBTypeMismatchException {
-		if (value instanceof List) {
-			return (List<UserDto>)value;
-		}
-		throw new DBTypeMismatchException();
-	}
+    public Field(String name, FieldType type, Object value) {
+        this.name = name.toLowerCase();
+        this.fieldType = type;
+        this.value = value;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name.toLowerCase();
+    }
+
+    public FieldType getFieldType() {
+        return fieldType;
+    }
+
+    public void setFieldType(FieldType fieldType) {
+        this.fieldType = fieldType;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public boolean isEmpty() {
+        return value == null;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public String getAsString() {
+        if (value instanceof String) {
+            return (String) value;
+        }
+        throw new TypeMismatchException();
+    }
+
+    public long getAsLong() {
+        if (value instanceof Long) {
+            return isEmpty() ? 0 : (Long) value;
+        }
+        throw new TypeMismatchException();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getAsStringList() {
+        if (value instanceof List) {
+            return (List<String>) value;
+        }
+        throw new TypeMismatchException();
+    }
+
+    public UserDto getAsUserInfo() {
+        if (value instanceof UserDto) {
+            return (UserDto) value;
+        }
+        throw new TypeMismatchException();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<FileDto> getAsFileList() {
+        if (value instanceof List) {
+            return (List<FileDto>) value;
+        }
+        throw new TypeMismatchException();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<UserDto> getAsUserList() {
+        if (value instanceof List) {
+            return (List<UserDto>) value;
+        }
+        throw new TypeMismatchException();
+    }
 }

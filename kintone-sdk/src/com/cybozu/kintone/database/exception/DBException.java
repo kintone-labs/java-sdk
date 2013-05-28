@@ -15,16 +15,24 @@
 package com.cybozu.kintone.database.exception;
 
 public class DBException extends Exception {
-	/**
-	 * An exception that provides information on kintone database access errors.
-	 */
-	private static final long serialVersionUID = 8036246942261521021L;
+    /**
+     * An exception that provides information on kintone database access errors.
+     */
+    private static final long serialVersionUID = 8036246942261521021L;
 
-	public DBException() {
-		super();
-	}
-	
-	public DBException(String message) {
-		super(message);
-	}
+    public DBException() {
+        super();
+    }
+
+    public DBException(Throwable e) {
+        super(e);
+    }
+    
+    public DBException(Throwable e, String message) {
+        super(message, e);
+    }
+    
+    public DBException(String message) {
+        super(message);
+    }
 }

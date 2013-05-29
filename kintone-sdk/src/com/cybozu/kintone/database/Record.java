@@ -14,6 +14,8 @@
 
 package com.cybozu.kintone.database;
 
+import java.io.File;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -33,7 +36,7 @@ import com.cybozu.kintone.database.exception.TypeMismatchException;
  */
 public class Record {
     static public final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-
+    
     private long id;
 
     private HashMap<String, Field> fields = new HashMap<String, Field>();
@@ -46,6 +49,10 @@ public class Record {
         this.id = id;
     }
 
+    public Set<Map.Entry<String, Field>> getEntrySet() {
+        return fields.entrySet();
+    }
+    
     public Set<String> getFieldNames() {
         return fields.keySet();
     }
@@ -74,11 +81,15 @@ public class Record {
         return this.id;
     }
 
+    public boolean isEmpty(String name) {
+        return fields.get(name.toLowerCase()).isEmpty();
+    }
+    
     public boolean hasField(String name) {
         return fields.containsKey(name.toLowerCase());
     }
 
-    public long getLong(String name) {
+    public Long getLong(String name) {
 
         return fields.get(name.toLowerCase()).getAsLong();
     }
@@ -116,6 +127,10 @@ public class Record {
         }
     }
 
+    public List<Record> getSubtable(String name) {
+        return fields.get(name.toLowerCase()).getAsSubtable();
+    }
+    
     public void setString(String name, String value) {
         Field field = new Field(name, FieldType.SINGLE_LINE_TEXT, value);
         addField(name, field);
@@ -137,10 +152,26 @@ public class Record {
         addField(name, field);
     }
 
-    public void setFile(String name, String fileKey) {
-        List<String> fileKeys = new ArrayList<String>();
-        fileKeys.add(fileKey);
-        setFiles(name, fileKeys);
+    public void setFile(String name, File file) {
+        setFile(name, file, null);
+    }
+    
+    public void setFile(String name, File file, String contentType) {
+        Field field = new Field(name, FieldType.FILE, null);
+        LazyUploader uploader = new FileLazyUploader(file, contentType);
+        field.setLazyUploader(uploader);
+        addField(name, field);
+    }
+    
+    public void setFile(String name, InputStream file, String fileName) {
+        setFile(name, file, fileName, null);
+    }
+    
+    public void setFile(String name, InputStream file, String fileName, String contentType) {
+        Field field = new Field(name, FieldType.FILE, null);
+        LazyUploader uploader = new InputStreamLazyUploader(file, fileName, contentType);
+        field.setLazyUploader(uploader);
+        addField(name, field);
     }
     
     public void setFiles(String name, List<String> fileKeys) {
@@ -168,5 +199,10 @@ public class Record {
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         String strDate = df.format(date);
         setString(name, strDate);
+    }
+    
+    public void setSubtable(String name, List<Record> value) {
+        Field field = new Field(name, FieldType.SUBTABLE, value);
+        addField(name, field);
     }
 }

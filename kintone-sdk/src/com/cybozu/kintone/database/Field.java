@@ -27,6 +27,8 @@ public class Field {
     private FieldType fieldType;
     private Object value;
 
+    private LazyUploader lazyUploader = null;
+    
     public Field(String name, FieldType type, Object value) {
         this.name = name.toLowerCase();
         this.fieldType = type;
@@ -62,21 +64,27 @@ public class Field {
     }
 
     public String getAsString() {
+        if (isEmpty()) return null;
+        
         if (value instanceof String) {
             return (String) value;
         }
         throw new TypeMismatchException();
     }
 
-    public long getAsLong() {
+    public Long getAsLong() {
+        if (isEmpty()) return null;
+        
         if (value instanceof Long) {
-            return isEmpty() ? 0 : (Long) value;
+            return (Long) value;
         }
         throw new TypeMismatchException();
     }
 
     @SuppressWarnings("unchecked")
     public List<String> getAsStringList() {
+        if (isEmpty()) return null;
+        
         if (value instanceof List) {
             return (List<String>) value;
         }
@@ -84,6 +92,8 @@ public class Field {
     }
 
     public UserDto getAsUserInfo() {
+        if (isEmpty()) return null;
+        
         if (value instanceof UserDto) {
             return (UserDto) value;
         }
@@ -92,6 +102,8 @@ public class Field {
 
     @SuppressWarnings("unchecked")
     public List<FileDto> getAsFileList() {
+        if (isEmpty()) return null;
+        
         if (value instanceof List) {
             return (List<FileDto>) value;
         }
@@ -100,9 +112,33 @@ public class Field {
 
     @SuppressWarnings("unchecked")
     public List<UserDto> getAsUserList() {
+        if (isEmpty()) return null;
+        
         if (value instanceof List) {
             return (List<UserDto>) value;
         }
         throw new TypeMismatchException();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<Record> getAsSubtable() {
+        if (isEmpty()) return null;
+        
+        if (value instanceof List) {
+            return (List<Record>) value;
+        }
+        throw new TypeMismatchException();
+    }
+    
+    public boolean isLazyUpload() {
+        return lazyUploader != null;
+    }
+
+    public void setLazyUploader(LazyUploader lazyUploader) {;
+        this.lazyUploader = lazyUploader;
+    }
+
+    public LazyUploader getLazyUploader() {
+        return lazyUploader;
     }
 }

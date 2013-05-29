@@ -143,19 +143,29 @@ public class ResultSet {
     }
 
     /**
-     * Get field value as long
+     * Check if the record value is empty
+     * @param name
+     *            field name
+     * @return true if the field value is empty
+     */
+    public boolean isEmpty(String name) {
+        return current.isEmpty(name);
+    }
+    
+    /**
+     * Get the field value as long
      * 
      * @param name
      *            field name
      * @return a long value of the field
      */
-    public long getLong(String name) {
+    public Long getLong(String name) {
 
         return current.getLong(name);
     }
 
     /**
-     * Get field value as string
+     * Get the field value as string
      * 
      * @param name
      *            field name
@@ -167,7 +177,7 @@ public class ResultSet {
     }
 
     /**
-     * Get field value as user object
+     * Get the field value as user object
      * 
      * @param name
      *            field name
@@ -178,7 +188,7 @@ public class ResultSet {
     }
 
     /**
-     * Get field value as user object array
+     * Get the field value as user object array
      * 
      * @param name
      *            field name
@@ -189,7 +199,7 @@ public class ResultSet {
     }
 
     /**
-     * Get field value as file object
+     * Get the field value as file object
      * 
      * @param name
      *            field name
@@ -201,7 +211,7 @@ public class ResultSet {
     }
 
     /**
-     * Get field value as string array
+     * Get the field value as string array
      * 
      * @param name
      *            field name
@@ -212,7 +222,7 @@ public class ResultSet {
     }
 
     /**
-     * Get field value as date
+     * Get the field value as date
      * 
      * @param name
      *            field name
@@ -222,6 +232,15 @@ public class ResultSet {
         return current.getDate(name);
     }
 
+    /**
+     * Get the field value as subtable
+     * @param name
+     * @return
+     */
+    public List<Record> getSubtable(String name) {
+        return current.getSubtable(name);
+    }
+    
     /**
      * Download file body
      * 

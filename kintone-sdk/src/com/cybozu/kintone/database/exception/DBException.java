@@ -14,12 +14,15 @@
 
 package com.cybozu.kintone.database.exception;
 
+import com.cybozu.kintone.database.ErrorResponse;
+
 public class DBException extends Exception {
     /**
      * An exception that provides information on kintone database access errors.
      */
     private static final long serialVersionUID = 8036246942261521021L;
-
+    private ErrorResponse error;
+    
     public DBException() {
         super();
     }
@@ -34,5 +37,21 @@ public class DBException extends Exception {
     
     public DBException(String message) {
         super(message);
+    }
+    
+    public DBException(ErrorResponse error) {
+        super(error.getMessage());
+        this.error = error;
+    }
+    
+    @Override
+    public String toString() {
+        if (error == null) return super.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("id: " + error.getId());
+        sb.append(", code: " + error.getCode());
+        sb.append(", message: " + error.getMessage());
+        
+        return sb.toString();
     }
 }

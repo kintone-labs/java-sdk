@@ -43,6 +43,8 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -53,25 +55,26 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import sun.misc.BASE64Encoder;
+
 import com.cybozu.kintone.database.exception.DBException;
 import com.cybozu.kintone.database.exception.DBNotFoundException;
 import com.cybozu.kintone.database.exception.ParseException;
-
-import sun.misc.BASE64Encoder;
 
 /**
  * kintone data access class
  * 
  */
 public class Connection {
-
+    public static final String DEFAULT_CONTENT_TYPE = "application/octetÅ|stream";
+    
     private final String AUTH_HEADER = "X-Cybozu-Authorization";
     private final String JSON_CONTENT = "application/json";
     private final String API_PREFIX = "/k/v1/";
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
     private final String USER_AGENT_KEY = "User-Agent";
     private final String USER_AGENT_VALUE = "kintone-SDK 1.0";
-
+    
     private final String SSL_KEY_STORE = "javax.net.ssl.keyStore";
     private final String SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
 
@@ -417,22 +420,13 @@ public class Connection {
 
         // receive response
         try {
-            int statusCode = conn.getResponseCode();
-            if (statusCode == 404) {
-                throw new DBNotFoundException("not found");
-            }
-            if (statusCode != 200) {
-                InputStream err = conn.getErrorStream();
-                response = streamToString(err);
-                throw new DBException("http status error(" + statusCode + "): "
-                        + response);
-            }
+            checkStatus(conn);
             InputStream is = conn.getInputStream();
             try {
                 if (outFile != null) {
                     OutputStream os = new FileOutputStream(outFile);
                     try {
-                        byte[] buffer = new byte[1024];
+                        byte[] buffer = new byte[8192];
                         int n = 0;
                         while (-1 != (n = is.read(buffer))) {
                             os.write(buffer, 0, n);
@@ -456,6 +450,50 @@ public class Connection {
     }
 
     /**
+     * Check status code of the response
+     * @param conn
+     *             a connection object
+     */
+    private void checkStatus(HttpURLConnection conn) throws IOException, DBException {
+        int statusCode = conn.getResponseCode();
+        if (statusCode == 404) {
+            ErrorResponse response = getErrorResponse(conn);
+            if (response == null) {
+                throw new DBNotFoundException("not found");
+            } else {
+                throw new DBNotFoundException(response);
+            }
+        }
+        if (statusCode != 200) {
+            ErrorResponse response = getErrorResponse(conn);
+            if (response == null) {
+                throw new DBException("http status error(" + statusCode + ")");
+            } else {
+                throw new DBException(response);
+            }
+        }
+    }
+    
+    /**
+     * Create error response object
+     * @param conn
+     * @return ErrorResponse object. return null if any error occurred
+     */
+    private ErrorResponse getErrorResponse(HttpURLConnection conn) {
+        
+        InputStream err = conn.getErrorStream();
+        
+        String response;
+        try {
+            response = streamToString(err);
+        } catch (IOException e) {
+            return null;
+        }
+        JsonParser parser = new JsonParser();
+        return parser.jsonToErrorResponse(response);
+    }
+    
+    /**
      * Upload file
      * 
      * @param contentType
@@ -465,7 +503,39 @@ public class Connection {
      * @return file key of the uploaded file
      * @throws DBException
      */
-    private String upload(String contentType, File file) throws DBException {
+    private String upload(File file, String contentType) throws DBException {
+        InputStream isFile;
+
+        try {
+            isFile = new FileInputStream(file.getAbsolutePath());
+        } catch (FileNotFoundException e1) {
+            throw new DBNotFoundException("cannot open file");
+        }
+        
+        try {
+            return upload(isFile, file.getName(), contentType);
+        } finally {
+            try {
+                isFile.close();
+            } catch (IOException e) {
+            }
+        }
+        
+    }
+    
+    /**
+     * Upload file
+     * 
+     * @param input
+     *            the file stream to be uploaded
+     * @param fileName
+     *            file name
+     * @param contentType
+     *            content type
+     * @return file key of the uploaded file
+     * @throws DBException
+     */
+    private String upload(InputStream input, String fileName, String contentType) throws DBException {
         HttpsURLConnection conn;
         String response = null;
 
@@ -505,51 +575,28 @@ public class Connection {
         }
 
         OutputStream os;
-        InputStream isFile;
 
         try {
-            isFile = new FileInputStream(file.getAbsolutePath());
-        } catch (FileNotFoundException e1) {
-            throw new DBNotFoundException("cannot open file");
-        }
-
-        try {
-            try {
                 os = conn.getOutputStream();
                 PrintStream ps = new PrintStream(os);
                 ps.print("--" + BOUNDARY + "\r\n");
                 ps.print("Content-Disposition: form-data; name=\"file\"; filename=\""
-                        + file.getName() + "\"\r\n");
+                        + fileName + "\"\r\n");
                 ps.print("Content-Type: " + contentType + "\r\n\r\n");
-                byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[8192];
                 int n = 0;
-                while (-1 != (n = isFile.read(buffer))) {
+                while (-1 != (n = input.read(buffer))) {
                     os.write(buffer, 0, n);
                 }
                 ps.print("\r\n--" + BOUNDARY + "--\r\n");
                 ps.close();
-            } catch (IOException e) {
-                throw new DBException("an error occurred while sending data");
-            }
-        } finally {
-            try {
-                isFile.close();
-            } catch (IOException e) {
-            }
+        } catch (IOException e) {
+            throw new DBException("an error occurred while sending data");
         }
-
+    
         // receive response
         try {
-            int statusCode = conn.getResponseCode();
-            if (statusCode == 404) {
-                throw new DBNotFoundException("not found");
-            }
-            if (statusCode != 200) {
-                InputStream err = conn.getErrorStream();
-                response = streamToString(err);
-                throw new DBException("http status error(" + statusCode + "): "
-                        + response);
-            }
+            checkStatus(conn);
             InputStream is = conn.getInputStream();
             try {
                 response = streamToString(is);
@@ -622,11 +669,11 @@ public class Connection {
         String response = request("GET", "records.json?" + api, null);
         JsonParser parser = new JsonParser();
         ResultSet rs = null;
-        ;
+        
         try {
             rs = parser.jsonToResultSet(this, response);
         } catch (IOException e) {
-            throw new ParseException("failed to parse json to reseltset");
+            throw new ParseException("failed to parse json to resultset");
         }
 
         return rs;
@@ -642,9 +689,23 @@ public class Connection {
      * @throws DBException
      */
     public void insert(long app, Record record) throws DBException {
-        insert(app, new Record[] { record });
+        List<Record> list = new ArrayList<Record>();
+        list.add(record);
+        insert(app, list);
     }
 
+    public void lazyUpload(Field field) throws DBException {
+        if (!field.isLazyUpload()) return;
+        
+        LazyUploader uploader = field.getLazyUploader();
+        String key = uploader.upload(this);
+        List<FileDto> list = new ArrayList<FileDto>();
+        FileDto file = new FileDto();
+        file.setFileKey(key);
+        list.add(file);
+        field.setValue(list);
+    }
+    
     /**
      * Insert new records
      * 
@@ -654,8 +715,16 @@ public class Connection {
      *            an array of Record objects to be inserted
      * @throws DBException
      */
-    public Long[] insert(long app, Record[] records) throws DBException {
+    public List<Long> insert(long app, List<Record> records) throws DBException {
 
+        for (Record record: records) {
+            Set<Map.Entry<String,Field>> set = record.getEntrySet();
+            for (Map.Entry<String,Field> entry: set) {
+                Field field = entry.getValue();
+                lazyUpload(field); // force lazy upload
+            }
+        }
+        
         JsonParser parser = new JsonParser();
         String json;
         try {
@@ -685,7 +754,9 @@ public class Connection {
      * @throws DBException
      */
     public void update(long app, long id, Record record) throws DBException {
-        update(app, new Long[] { id }, record);
+        List<Long> list = new ArrayList<Long>();
+        list.add(id);
+        update(app, list, record);
     }
 
     /**
@@ -699,7 +770,15 @@ public class Connection {
      *            updated record object
      * @throws DBException
      */
-    public void update(long app, Long[] ids, Record record) throws DBException {
+    public void update(long app, List<Long> ids, Record record)
+            throws DBException {
+        
+        Set<Map.Entry<String,Field>> set = record.getEntrySet();
+        for (Map.Entry<String,Field> entry: set) {
+            Field field = entry.getValue();
+            lazyUpload(field); // force lazy upload
+        }
+    
         JsonParser parser = new JsonParser();
         String json;
         try {
@@ -708,16 +787,7 @@ public class Connection {
             throw new ParseException("failed to encode to json");
         }
 
-        try {
-            request("PUT", "records.json", json);
-        } catch (DBNotFoundException e) {
-
-        }
-    }
-
-    public void update(long app, List<Long> ids, Record record)
-            throws DBException {
-        update(app, ids.toArray(new Long[0]), record);
+        request("PUT", "records.json", json);
     }
 
     /**
@@ -744,7 +814,7 @@ public class Connection {
             ids.add(rs.getId());
         }
 
-        update(app, ids.toArray(new Long[0]), record);
+        update(app, ids, record);
 
     }
 
@@ -782,11 +852,7 @@ public class Connection {
         }
         String api = new String(sb);
 
-        try {
-            request("DELETE", "records.json?" + api, null);
-        } catch (DBNotFoundException e) {
-
-        }
+        request("DELETE", "records.json?" + api, null);
     }
 
     public void delete(long app, List<Long> ids) throws DBException {
@@ -823,16 +889,50 @@ public class Connection {
     /**
      * Upload file
      * 
+     * @param file
+     *            file object to be uploaded
      * @param contentType
      *            content type
+     * @return file key
+     * @throws DBException
+     */
+    public String uploadFile(File file, String contentType) throws DBException {
+
+        if (contentType == null) {
+            contentType = DEFAULT_CONTENT_TYPE;
+        }
+        return upload(file, contentType);
+    }
+
+    /**
+     * Upload file
+     * 
      * @param file
      *            file object to be uploaded
      * @return file key
      * @throws DBException
      */
-    public String uploadFile(String contentType, File file) throws DBException {
+    public String uploadFile(File file) throws DBException {
+        return uploadFile(file, null);
+    }
 
-        return upload(contentType, file);
+    /**
+     * Upload file
+     * 
+     * @param contentType
+     *            content type
+     * @param stream
+     *            file input stream to be uploaded
+     * @param fileName
+     *            upload file name
+     * @return file key
+     * @throws DBException
+     */
+    public String uploadFile(String contentType, InputStream file, String fileName) throws DBException {
+        if (contentType == null) {
+            contentType = DEFAULT_CONTENT_TYPE;
+        }
+        return upload(file, fileName, contentType);
     }
 
     /**

@@ -72,7 +72,8 @@ public class SdkSample {
                 UserDto creator = rs.getUser("creator");
                 String name = rs.getString("name");
                 List<String> strings = rs.getStrings("checkbox");
-
+                List<Record> subtable = rs.getSubtable("table1");
+                
                 StringBuilder sb = new StringBuilder();
                 sb.append("no:");
                 sb.append(recNo);
@@ -87,6 +88,13 @@ public class SdkSample {
                     for (String s : strings) {
                         sb.append("[");
                         sb.append(s);
+                        sb.append("]");
+                    }
+                }
+                if (subtable.size() > 0) {
+                    for (Record r : subtable) {
+                        sb.append("[");
+                        sb.append(r.getFieldNames().toString());
                         sb.append("]");
                     }
                 }
@@ -125,28 +133,30 @@ public class SdkSample {
         }
 
         // insert new records
-
-        record.setString("code", "456");
-        list.add(record);
-        try {
-            db.insert(app, list.toArray(new Record[0]));
-        } catch (DBException e1) {
-            e1.printStackTrace();
-        }
-
         // upload file
         String fileKey = null;
         try {
-            File file = new File("c:\\tmp\\upload.jpg");
-            fileKey = db.uploadFile("image/jpeg", file);
+            File file = new File("c:\\tmp\\upload1.jpg");
+            fileKey = db.uploadFile(file);
         } catch (DBException e) {
             e.printStackTrace();
         }
 
+        record.setString("code", "456");
+        List<String> files = new ArrayList<String>();
+        files.add(fileKey);
+        record.setFiles("file", files);
+        list.add(record);
+        try {
+            db.insert(app, list);
+        } catch (DBException e1) {
+            e1.printStackTrace();
+        }
+        
         // update a record
         record = new Record();
         record.setString("name", "bobby");
-        record.setFile("file", fileKey);
+        record.setFile("file", new File("c:\\tmp\\upload2.jpg"), "image/jpeg");
         try {
             db.update(app, 2, record);
         } catch (DBException e1) {

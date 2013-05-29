@@ -14,6 +14,8 @@
 
 package com.cybozu.kintone.database.exception;
 
+import com.cybozu.kintone.database.ErrorResponse;
+
 public class DBNotFoundException extends DBException {
     /**
      * An exception which occurs when 404 not found
@@ -22,5 +24,9 @@ public class DBNotFoundException extends DBException {
 
     public DBNotFoundException(String message) {
         super(message);
+    }
+    
+    public DBNotFoundException(ErrorResponse error) {
+        super(error);
     }
 }

@@ -35,12 +35,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.cybozu.kintone.database.exception.TypeMismatchException;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -57,66 +63,93 @@ public class JsonParser {
 
     }
 
+    /**
+     * Convert json string to error response object
+     * @param json
+     *            a json string
+     * @return error response object
+     */
+    public ErrorResponse jsonToErrorResponse(String json) {
+        Gson gson = new Gson();
+        try {
+            return gson.fromJson(json, ErrorResponse.class);
+        } catch (JsonSyntaxException e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Convert json string to resultset
+     * @param con
+     *            a connection object
+     * @param json
+     *            a json string
+     * @return resultset object
+     * @throws IOException
+     */
     public ResultSet jsonToResultSet(Connection con, String json)
             throws IOException {
 
         ResultSet rs = new ResultSet(con);
-        ByteArrayInputStream in = new ByteArrayInputStream(json.getBytes());
-        JsonReader reader = new JsonReader(new InputStreamReader(in));
-
-        reader.beginObject();
-        reader.nextName();
-        reader.beginArray();
-        while (reader.hasNext()) {
-            Record record = readRecord(reader);
-            if (record != null) {
-                rs.add(record);
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        if (root.isJsonObject()) {
+            JsonArray records = root.getAsJsonObject().get("records").getAsJsonArray();
+            for (JsonElement elem: records) {
+                Record record = readRecord(elem);
+                if (record != null) {
+                    rs.add(record);
+                }
             }
         }
-        reader.endArray();
-        reader.endObject();
         return rs;
     }
-
-    private Record readRecord(JsonReader reader) throws IOException {
+    
+    /**
+     * Read and parse each record element
+     * @param elem
+     *            a json element represents a record object
+     * @return the record object created
+     * @throws IOException
+     */
+    private Record readRecord(JsonElement elem) throws IOException {
 
         Record record = new Record();
 
-        reader.beginObject();
-        while (reader.hasNext()) {
-            Field field = readField(reader);
-            if (field != null) {
-                record.addField(field.getName(), field);
+        if (elem.isJsonObject()) {
+            JsonObject obj = elem.getAsJsonObject();
+            Set<Map.Entry<String,JsonElement>> set = obj.entrySet();
+            for (Map.Entry<String,JsonElement> entry: set) {
+                Field field = readField(entry.getKey(), entry.getValue());
+                if (field != null) {
+                    record.addField(field.getName(), field);
+                }
             }
         }
-        reader.endObject();
 
         return record;
     }
 
-    private Field readField(JsonReader reader) throws IOException {
+    /**
+     * Read and parse each field element
+     * @param fieldName
+     *            the field name
+     * @param elem
+     *            a json element represents a record object
+     * @return the field object created
+     * @throws IOException
+     */
+    private Field readField(String fieldName, JsonElement fieldElem) throws IOException {
 
         Field field = null;
 
-        FieldType type = null;
-        JsonElement element = null;
-
-        String fieldName = reader.nextName();
-        reader.beginObject();
-        while (reader.hasNext()) {
-            String name = reader.nextName();
-            if (name.equals("type")) {
-                String strType = reader.nextString();
-                type = FieldType.getEnum(strType);
-            } else if (name.equals("value")) {
-                com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
-                element = parser.parse(reader);
-            } else {
-                reader.skipValue();
-            }
-        }
-
-        reader.endObject();
+        
+        if (!fieldElem.isJsonObject()) return null;
+        JsonObject obj = fieldElem.getAsJsonObject();
+        
+        FieldType type = FieldType.getEnum(obj.get("type").getAsString());
+        JsonElement element = obj.get("value");
 
         Object object = null;
         String strVal = null;
@@ -158,7 +191,6 @@ public class JsonParser {
             case FILE:
                 object = jsonToFileArray(element);
                 break;
-            case USER_SELECT:
             case CREATOR:
             case MODIFIER:
                 if (element.isJsonObject()) {
@@ -166,10 +198,12 @@ public class JsonParser {
                     object = gson.fromJson(element, UserDto.class);
                 }
                 break;
+            case USER_SELECT:
             case STATUS_ASSIGNEE:
                 object = jsonToUserArray(element);
                 break;
             case SUBTABLE:
+                object = jsonToSubtable(element);
                 break;
             }
         }
@@ -178,6 +212,31 @@ public class JsonParser {
         return field;
     }
 
+    private List<Record> jsonToSubtable(JsonElement element) throws IOException {
+        List<Record> rs = new ArrayList<Record>();
+        
+        if (!element.isJsonArray()) return null;
+        
+        JsonArray records = element.getAsJsonArray();
+        for (JsonElement elem: records) {
+            if (elem.isJsonObject()) {
+                JsonObject obj = elem.getAsJsonObject();
+                String id = obj.get("id").getAsString();
+                JsonElement value = obj.get("value");
+                Record record = readRecord(value);
+                if (record != null) {
+                    try {
+                        record.setId(Long.valueOf(id));
+                    } catch (NumberFormatException e) {
+                    }
+                    rs.add(record);
+                }
+            }
+        }
+        
+        return rs;
+    }
+    
     private List<String> jsonToStringArray(JsonElement element) {
         if (!element.isJsonArray())
             return null;
@@ -276,6 +335,11 @@ public class JsonParser {
                 writer.name("code").value(field.getAsUserInfo().getCode());
                 writer.endObject();
                 break;
+            case SUBTABLE:
+                writer.beginArray();
+                List<Record> subtable = field.getAsSubtable();
+                writeSubtable(writer, subtable);
+                break;
             default:
                 writer.value("");
             }
@@ -283,7 +347,41 @@ public class JsonParser {
         writer.endObject();
     }
 
-    public String recordsToJsonForInsert(long app, Record[] records)
+    /**
+     * Write subtable value to json
+     * @param writer
+     *            a json writer
+     * @param subtable
+     *            a subtable object
+     */
+    private void writeSubtable(JsonWriter writer, Iterable<Record> subtable) throws IOException {
+        for (Record record : subtable) {
+            writer.beginObject();
+            //writer.name("id").value(record.getId());
+            writer.name("value");
+            writer.beginObject();
+            for (String fieldName : record.getFieldNames()) {
+                Field field = record.getField(fieldName);
+                try {
+                    writeField(writer, field);
+                } catch (TypeMismatchException e) {
+                    e.printStackTrace();
+                }
+            }
+            writer.endObject();
+            writer.endObject();
+        }
+    }
+    /**
+     * Generate json string for insert method
+     * @param app
+     *            the application id
+     * @param records
+     *            the array of the record object
+     * @return the json string
+     * @throws IOException
+     */
+    public String recordsToJsonForInsert(long app, List<Record> records)
             throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
@@ -295,8 +393,9 @@ public class JsonParser {
         writer.beginArray();
         for (Record record : records) {
             writer.beginObject();
-            for (String fieldName : record.getFieldNames()) {
-                Field field = record.getField(fieldName);
+            Set<Map.Entry<String,Field>> set = record.getEntrySet();
+            for (Map.Entry<String,Field> entry: set) {
+                Field field = entry.getValue();
                 try {
                     writeField(writer, field);
                 } catch (TypeMismatchException e) {
@@ -313,13 +412,26 @@ public class JsonParser {
         return new String(baos.toByteArray());
     }
 
-    public Long[] jsonToLongArray(String json) {
+    /**
+     * Retrieve the array of the Long values from json
+     * @param json
+     *            a json string
+     * @return the array of the long value
+     */
+    public List<Long> jsonToLongArray(String json) {
         Gson gson = new Gson();
-
-        return gson.fromJson(json, Long[].class);
+        Type listType = new TypeToken<ArrayList<Long>>() {}.getType();
+        return gson.fromJson(json, listType);
     }
 
-    public Long[] jsonToIDs(String json) throws IOException {
+    /**
+     * Retrieve the array of the ids from json string
+     * @param json
+     *            a json string
+     * @return the array of the id
+     * @throws IOException
+     */
+    public List<Long> jsonToIDs(String json) throws IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(json.getBytes());
         JsonReader reader = new JsonReader(new InputStreamReader(in));
 
@@ -327,15 +439,27 @@ public class JsonParser {
         reader.nextName();
 
         Gson gson = new Gson();
-
-        Long[] ids = gson.fromJson(reader, Long[].class);
+        Type listType = new TypeToken<ArrayList<Long>>() {}.getType();
+        List<Long> ids = gson.fromJson(reader, listType);
 
         reader.endObject();
 
         return ids;
     }
 
-    public String recordsToJsonForUpdate(long app, Long[] ids, Record record)
+    /**
+     * Generate json string for update method
+     * @param app
+     *            the application id
+     * @param ids
+     *            the array of the record id to be updated
+     * @param record
+     *            the values of updated records
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdate(long app, List<Long> ids, Record record)
             throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
@@ -368,7 +492,14 @@ public class JsonParser {
         writer.close();
         return new String(baos.toByteArray());
     }
-
+    
+    /**
+     * Retrieve file key string from json
+     * @param json
+     *            a json string
+     * @return the file key
+     * @throws IOException
+     */
     public String jsonToFileKey(String json) throws IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(json.getBytes());
         JsonReader reader = new JsonReader(new InputStreamReader(in));

@@ -75,14 +75,10 @@ public class SdkSample {
                 List<Record> subtable = rs.getSubtable("table1");
                 
                 StringBuilder sb = new StringBuilder();
-                sb.append("no:");
-                sb.append(recNo);
-                sb.append(",code:");
-                sb.append(code);
-                sb.append(",created:");
-                sb.append(created);
-                sb.append(",name:");
-                sb.append(name);
+                sb.append("no:" + recNo);
+                sb.append(",code:" + code);
+                sb.append(",created:" + created);
+                sb.append(",name:" + name);
                 sb.append(",check:");
                 if (strings.size() > 0) {
                     for (String s : strings) {

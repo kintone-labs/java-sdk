@@ -44,6 +44,10 @@ public class DBException extends Exception {
         this.error = error;
     }
     
+    public ErrorResponse getErrorResponse() {
+        return error;
+    }
+    
     @Override
     public String toString() {
         if (error == null) return super.toString();

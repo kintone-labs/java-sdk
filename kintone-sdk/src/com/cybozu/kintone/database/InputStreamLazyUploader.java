@@ -4,6 +4,10 @@ import java.io.InputStream;
 
 import com.cybozu.kintone.database.exception.DBException;
 
+/**
+ * Lazy file uploader for InputStream class
+ *
+ */
 public class InputStreamLazyUploader implements LazyUploader {
 
     private InputStream file;

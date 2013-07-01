@@ -2,7 +2,7 @@
 
 version 0.1
 
-## Requiremtnts
+## Requirements
 
 * JDK 6 or later
 

@@ -18,7 +18,7 @@ import com.cybozu.kintone.database.ErrorResponse;
 
 public class DBNotFoundException extends DBException {
     /**
-     * An exception which occurs when 404 not found
+     * An exception which occurs when 404 not found.
      */
     private static final long serialVersionUID = 3706182459275076255L;
 

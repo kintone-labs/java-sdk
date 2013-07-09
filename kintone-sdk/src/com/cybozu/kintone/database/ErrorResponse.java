@@ -1,7 +1,7 @@
 package com.cybozu.kintone.database;
 
 /**
- * Represents an error response by kintone
+ * Represents an error response by kintone.
  *
  */
 public class ErrorResponse {

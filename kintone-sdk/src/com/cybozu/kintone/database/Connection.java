@@ -62,7 +62,7 @@ import com.cybozu.kintone.database.exception.DBNotFoundException;
 import com.cybozu.kintone.database.exception.ParseException;
 
 /**
- * kintone data access class
+ * kintone data access class.
  * 
  */
 public class Connection {
@@ -91,7 +91,7 @@ public class Connection {
      * 
      * @param domain
      *            domain name. if your FQDN is "example.cybozu.com", domain name
-     *            is "example"
+     *            is "example".
      * @param login
      *            login name
      * @param password
@@ -106,7 +106,7 @@ public class Connection {
     }
 
     /**
-     * Generate URL
+     * Generates the URL of the API.
      * 
      * @param api 
      *            path to api
@@ -132,7 +132,7 @@ public class Connection {
     }
 
     /**
-     * Clear the settings of this connection
+     * Clears the settings of this connection.
      */
     public void close() {
         auth = null;
@@ -144,7 +144,7 @@ public class Connection {
     }
 
     /**
-     * Return if this connection trusts all hosts (for debug)
+     * Returns if this connection trusts all hosts (for debug).
      * 
      * @return true if this connection trusts all hosts
      */
@@ -153,7 +153,7 @@ public class Connection {
     }
 
     /**
-     * Set to trust all hosts without verifying (for debug)
+     * Sets to trust all hosts without verifying (for debug).
      * 
      * @param trustAllHosts
      */
@@ -162,7 +162,7 @@ public class Connection {
     }
 
     /**
-     * Set basic authentication password
+     * Sets an basic authentication password.
      * 
      * @param username
      * @param password
@@ -177,7 +177,7 @@ public class Connection {
     }
 
     /**
-     * Add a user customized header
+     * Adds a user customized header.
      * 
      * @param name
      *            header name
@@ -193,7 +193,7 @@ public class Connection {
     }
 
     /**
-     * Set proxy
+     * Sets the proxy host.
      * 
      * @param host
      *            proxy host
@@ -206,7 +206,7 @@ public class Connection {
     }
 
     /**
-     * Set client certificate authentication
+     * Sets the client certificate authentication.
      * 
      * @param cert
      *            cert file path
@@ -221,7 +221,7 @@ public class Connection {
     }
 
     /**
-     * Bind client certification to the connection
+     * Binds the client certification to the connection.
      * @param conn
      *            connection object
      * @throws DBException
@@ -262,7 +262,7 @@ public class Connection {
     }
 
     /**
-     * Make the connection trust all hosts
+     * Makes the connection trust all hosts.
      * 
      * @param conn
      *            connection object
@@ -304,7 +304,7 @@ public class Connection {
     }
 
     /**
-     * HostnameVerifier verify everything
+     * HostnameVerifier verify everything.
      *
      */
     private class VerifyEverythingHostnameVerifier implements HostnameVerifier {
@@ -315,7 +315,7 @@ public class Connection {
     }
 
     /**
-     * Request to kintone
+     * Sends a request to kintone.
      * 
      * @param method
      *            GET, POST, PUT or DELETE
@@ -331,6 +331,10 @@ public class Connection {
         return request(method, api, body, null);
     }
 
+    /**
+     * Sets user defined HTTP headers.
+     * @param conn connection object
+     */
     private void setHTTPHeaders(HttpURLConnection conn) {
         conn.setRequestProperty(AUTH_HEADER, this.auth);
         conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
@@ -340,7 +344,7 @@ public class Connection {
     }
 
     /**
-     * Request to kintone
+     * Sends a request to kintone.
      * 
      * @param method
      *            GET, POST, PUT or DELETE
@@ -450,7 +454,7 @@ public class Connection {
     }
 
     /**
-     * Check status code of the response
+     * Checks the status code of the response.
      * @param conn
      *             a connection object
      */
@@ -475,7 +479,7 @@ public class Connection {
     }
     
     /**
-     * Create error response object
+     * Creates an error response object.
      * @param conn
      * @return ErrorResponse object. return null if any error occurred
      */
@@ -494,7 +498,7 @@ public class Connection {
     }
     
     /**
-     * Upload file
+     * Uploads a file.
      * 
      * @param contentType
      *            content type
@@ -524,7 +528,7 @@ public class Connection {
     }
     
     /**
-     * Upload file
+     * Uploads a file from input stream.
      * 
      * @param input
      *            the file stream to be uploaded
@@ -617,6 +621,12 @@ public class Connection {
         return fileKey;
     }
 
+    /**
+     * An utility method converts a stream object to string.
+     * @param is input stream
+     * @return string
+     * @throws IOException
+     */
     private String streamToString(InputStream is) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader reader = new BufferedReader(new InputStreamReader(is,
@@ -634,7 +644,7 @@ public class Connection {
     }
 
     /**
-     * Select records
+     * Selects the records from kintone using a query string.
      * 
      * @param app
      *            application id
@@ -680,7 +690,7 @@ public class Connection {
     }
 
     /**
-     * Insert a new record
+     * Inserts a new record.
      * 
      * @param app
      *            application id
@@ -694,6 +704,11 @@ public class Connection {
         insert(app, list);
     }
 
+    /**
+     * Uploads the file binded with the field and sets the file key.
+     * @param field
+     * @throws DBException
+     */
     public void lazyUpload(Field field) throws DBException {
         if (!field.isLazyUpload()) return;
         
@@ -707,7 +722,7 @@ public class Connection {
     }
     
     /**
-     * Insert new records
+     * Inserts new records.
      * 
      * @param app
      *            application id
@@ -743,7 +758,7 @@ public class Connection {
     }
 
     /**
-     * Update a record
+     * Updates a record.
      * 
      * @param app
      *            application id
@@ -760,7 +775,7 @@ public class Connection {
     }
 
     /**
-     * Update records
+     * Updates records.
      * 
      * @param app
      *            application id
@@ -791,7 +806,7 @@ public class Connection {
     }
 
     /**
-     * Update records
+     * Updates records.
      * 
      * @param app
      *            application id
@@ -819,7 +834,7 @@ public class Connection {
     }
 
     /**
-     * Delete a record
+     * Deletes a record.
      * 
      * @param app
      *            application id
@@ -832,7 +847,7 @@ public class Connection {
     }
 
     /**
-     * Delete records
+     * Deletes records.
      * 
      * @param app
      *            application id
@@ -855,12 +870,20 @@ public class Connection {
         request("DELETE", "records.json?" + api, null);
     }
 
+    /**
+     * Deletes records.
+     * @param app
+     *           application id
+     * @param ids
+     *           a list of record numbers to be deleted
+     * @throws DBException
+     */
     public void delete(long app, List<Long> ids) throws DBException {
         delete(app, ids.toArray(new Long[0]));
     }
 
     /**
-     * Delete records
+     * Deletes records.
      * 
      * @param app
      *            application id
@@ -887,7 +910,7 @@ public class Connection {
     }
 
     /**
-     * Upload file
+     * Uploads a file with the content type.
      * 
      * @param file
      *            file object to be uploaded
@@ -905,7 +928,7 @@ public class Connection {
     }
 
     /**
-     * Upload file
+     * Uploads a file.
      * 
      * @param file
      *            file object to be uploaded
@@ -917,12 +940,12 @@ public class Connection {
     }
 
     /**
-     * Upload file
+     * Uploads a file from input stream.
      * 
      * @param contentType
      *            content type
-     * @param stream
-     *            file input stream to be uploaded
+     * @param file
+     *            file object to be uploaded
      * @param fileName
      *            upload file name
      * @return file key
@@ -936,7 +959,7 @@ public class Connection {
     }
 
     /**
-     * Download file
+     * Downloads a file.
      * 
      * @param fileKey
      *            file key

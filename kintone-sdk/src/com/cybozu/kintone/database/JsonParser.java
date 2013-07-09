@@ -64,7 +64,7 @@ public class JsonParser {
     }
 
     /**
-     * Convert json string to error response object
+     * Converts the json string to the error response object.
      * @param json
      *            a json string
      * @return error response object
@@ -79,7 +79,7 @@ public class JsonParser {
     }
     
     /**
-     * Convert json string to resultset
+     * Converts the json string to the resultset object.
      * @param con
      *            a connection object
      * @param json
@@ -107,7 +107,7 @@ public class JsonParser {
     }
     
     /**
-     * Read and parse each record element
+     * Reads and parses each record element.
      * @param elem
      *            a json element represents a record object
      * @return the record object created
@@ -132,7 +132,7 @@ public class JsonParser {
     }
 
     /**
-     * Read and parse each field element
+     * Reads and parses each field element.
      * @param fieldName
      *            the field name
      * @param elem
@@ -212,6 +212,12 @@ public class JsonParser {
         return field;
     }
 
+    /**
+     * Converts json element to the sub table object.
+     * @param element json element
+     * @return sub table object
+     * @throws IOException
+     */
     private List<Record> jsonToSubtable(JsonElement element) throws IOException {
         List<Record> rs = new ArrayList<Record>();
         
@@ -237,6 +243,12 @@ public class JsonParser {
         return rs;
     }
     
+    /**
+     * Converts json element to the string array object.
+     * @param element json element
+     * @return string array object
+     * @throws IOException
+     */
     private List<String> jsonToStringArray(JsonElement element) {
         if (!element.isJsonArray())
             return null;
@@ -247,6 +259,12 @@ public class JsonParser {
         return gson.fromJson(element, collectionType);
     }
 
+    /**
+     * Converts json element to the user array object.
+     * @param element json element
+     * @return user array object
+     * @throws IOException
+     */
     private List<UserDto> jsonToUserArray(JsonElement element) {
         if (!element.isJsonArray())
             return null;
@@ -257,6 +275,12 @@ public class JsonParser {
         return gson.fromJson(element, collectionType);
     }
 
+    /**
+     * Converts json element to the file array object.
+     * @param element json element
+     * @return file array object
+     * @throws IOException
+     */
     private List<FileDto> jsonToFileArray(JsonElement element) {
         if (!element.isJsonArray())
             return null;
@@ -267,6 +291,12 @@ public class JsonParser {
         return gson.fromJson(element, collectionType);
     }
 
+    /**
+     * Writes the field object with json writer.
+     * @param writer json writer
+     * @param field field object
+     * @throws IOException
+     */
     private void writeField(JsonWriter writer, Field field) throws IOException {
         writer.name(field.getName());
         writer.beginObject();
@@ -348,7 +378,7 @@ public class JsonParser {
     }
 
     /**
-     * Write subtable value to json
+     * Writes the subtable value to json.
      * @param writer
      *            a json writer
      * @param subtable
@@ -373,7 +403,7 @@ public class JsonParser {
         }
     }
     /**
-     * Generate json string for insert method
+     * Generates the json string for insert method.
      * @param app
      *            the application id
      * @param records
@@ -413,7 +443,7 @@ public class JsonParser {
     }
 
     /**
-     * Retrieve the array of the Long values from json
+     * Retrieves the array of the Long values from json.
      * @param json
      *            a json string
      * @return the array of the long value
@@ -425,7 +455,7 @@ public class JsonParser {
     }
 
     /**
-     * Retrieve the array of the ids from json string
+     * Retrieves the array of the ids from json string.
      * @param json
      *            a json string
      * @return the array of the id
@@ -448,7 +478,7 @@ public class JsonParser {
     }
 
     /**
-     * Generate json string for update method
+     * Generates the json string for update method.
      * @param app
      *            the application id
      * @param ids
@@ -494,7 +524,7 @@ public class JsonParser {
     }
     
     /**
-     * Retrieve file key string from json
+     * Retrieves the file key string from json string.
      * @param json
      *            a json string
      * @return the file key

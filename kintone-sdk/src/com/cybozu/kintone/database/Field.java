@@ -29,40 +29,78 @@ public class Field {
 
     private LazyUploader lazyUploader = null;
     
+    /**
+     * Constructor
+     * @param name field name
+     * @param type field type
+     * @param value field value
+     */
     public Field(String name, FieldType type, Object value) {
         this.name = name.toLowerCase();
         this.fieldType = type;
         this.value = value;
     }
 
+    /**
+     * Gets the field name.
+     * @return field name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the field name.
+     * @param name field name
+     */
     public void setName(String name) {
         this.name = name.toLowerCase();
     }
 
+    /**
+     * Gets the field type.
+     * @return field type
+     */
     public FieldType getFieldType() {
         return fieldType;
     }
 
+    /**
+     * Sets the field type.
+     * @param fieldType field type object
+     */
     public void setFieldType(FieldType fieldType) {
         this.fieldType = fieldType;
     }
 
+    /**
+     * Gets the field value.
+     * @return field value
+     */
     public Object getValue() {
         return value;
     }
 
+    /**
+     * returns if the value is empty.
+     * @return true if the value is empty
+     */
     public boolean isEmpty() {
         return value == null;
     }
 
+    /**
+     * Sets the field value.
+     * @param value an object represents the field value
+     */
     public void setValue(Object value) {
         this.value = value;
     }
 
+    /**
+     * Gets the field value as string object.
+     * @return string object
+     */
     public String getAsString() {
         if (isEmpty()) return null;
         
@@ -72,6 +110,10 @@ public class Field {
         throw new TypeMismatchException();
     }
 
+    /**
+     * Gets the field value as long object.
+     * @return long object
+     */
     public Long getAsLong() {
         if (isEmpty()) return null;
         
@@ -81,6 +123,10 @@ public class Field {
         throw new TypeMismatchException();
     }
 
+    /**
+     * Gets the field value as string list.
+     * @return string list object
+     */
     @SuppressWarnings("unchecked")
     public List<String> getAsStringList() {
         if (isEmpty()) return null;
@@ -91,6 +137,10 @@ public class Field {
         throw new TypeMismatchException();
     }
 
+    /**
+     * Gets the field value as user info object.
+     * @return user info object
+     */
     public UserDto getAsUserInfo() {
         if (isEmpty()) return null;
         
@@ -100,6 +150,10 @@ public class Field {
         throw new TypeMismatchException();
     }
 
+    /**
+     * Gets the field value as file list object.
+     * @return file list object
+     */
     @SuppressWarnings("unchecked")
     public List<FileDto> getAsFileList() {
         if (isEmpty()) return null;
@@ -110,6 +164,10 @@ public class Field {
         throw new TypeMismatchException();
     }
 
+    /**
+     * Gets the field value as user list object.
+     * @return user list object
+     */
     @SuppressWarnings("unchecked")
     public List<UserDto> getAsUserList() {
         if (isEmpty()) return null;
@@ -120,6 +178,10 @@ public class Field {
         throw new TypeMismatchException();
     }
     
+    /**
+     * Gets the field value as a sub table.
+     * @return record list object
+     */
     @SuppressWarnings("unchecked")
     public List<Record> getAsSubtable() {
         if (isEmpty()) return null;
@@ -130,14 +192,26 @@ public class Field {
         throw new TypeMismatchException();
     }
     
+    /**
+     * return whether the lazy uploader was set.
+     * @return true if the lazy uploader wa set
+     */
     public boolean isLazyUpload() {
         return lazyUploader != null;
     }
 
+    /**
+     * Sets the lazy uploader.
+     * @param lazyUploader uploader
+     */
     public void setLazyUploader(LazyUploader lazyUploader) {;
         this.lazyUploader = lazyUploader;
     }
 
+    /**
+     * Gets the lazy uploader.
+     * @return uploader
+     */
     public LazyUploader getLazyUploader() {
         return lazyUploader;
     }

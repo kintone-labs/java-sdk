@@ -5,7 +5,7 @@ import java.io.InputStream;
 import com.cybozu.kintone.database.exception.DBException;
 
 /**
- * Lazy file uploader for InputStream class
+ * Implemented class of lazy file uploader for using InputStream.
  *
  */
 public class InputStreamLazyUploader implements LazyUploader {

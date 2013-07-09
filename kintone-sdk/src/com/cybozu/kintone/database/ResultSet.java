@@ -43,7 +43,7 @@ public class ResultSet {
     }
 
     /**
-     * Add a new record
+     * Adds a new record.
      * 
      * @param record
      *            record object
@@ -53,7 +53,7 @@ public class ResultSet {
     }
 
     /**
-     * Clear result set.
+     * Clears the result set.
      */
     public void clear() {
         records.clear();
@@ -62,7 +62,7 @@ public class ResultSet {
     }
 
     /**
-     * Move to the previous record.
+     * Moves to the previous record.
      * 
      * @return true if succeeded
      */
@@ -75,7 +75,7 @@ public class ResultSet {
     }
 
     /**
-     * Move to the next record.
+     * Moves to the next record.
      * 
      * @return true if succeeded
      */
@@ -88,7 +88,7 @@ public class ResultSet {
     }
 
     /**
-     * Move to the first record.
+     * Moves to the first record.
      * 
      * @return true if succeeded
      */
@@ -101,7 +101,7 @@ public class ResultSet {
     }
 
     /**
-     * Move to the last record.
+     * Moves to the last record.
      * 
      * @return true if succeeded
      */
@@ -114,7 +114,7 @@ public class ResultSet {
     }
 
     /**
-     * Get record number of the record
+     * Gets the record number of the record.
      * 
      * @return record number
      */
@@ -123,7 +123,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the count of the record set
+     * Gets the count of the record set.
      * 
      * @return record count
      */
@@ -132,7 +132,7 @@ public class ResultSet {
     }
 
     /**
-     * Check if the record has the field
+     * Checks if the record has the field.
      * 
      * @param name
      *            field name
@@ -143,7 +143,7 @@ public class ResultSet {
     }
 
     /**
-     * Check if the record value is empty
+     * Checks if the record value is empty.
      * @param name
      *            field name
      * @return true if the field value is empty
@@ -153,7 +153,7 @@ public class ResultSet {
     }
     
     /**
-     * Get the field value as long
+     * Gets the field value as long.
      * 
      * @param name
      *            field name
@@ -165,7 +165,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as string
+     * Gets the field value as string.
      * 
      * @param name
      *            field name
@@ -177,7 +177,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as user object
+     * Gets the field value as user object.
      * 
      * @param name
      *            field name
@@ -188,7 +188,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as user object array
+     * Gets the field value as user object array.
      * 
      * @param name
      *            field name
@@ -199,7 +199,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as file object
+     * Gets the field value as file object.
      * 
      * @param name
      *            field name
@@ -211,7 +211,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as string array
+     * Gets the field value as string array.
      * 
      * @param name
      *            field name
@@ -222,7 +222,7 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as date
+     * Gets the field value as date.
      * 
      * @param name
      *            field name
@@ -233,16 +233,16 @@ public class ResultSet {
     }
 
     /**
-     * Get the field value as subtable
+     * Gets the field value as a sub table.
      * @param name
-     * @return
+     * @return a sub table object
      */
     public List<Record> getSubtable(String name) {
         return current.getSubtable(name);
     }
     
     /**
-     * Download file body
+     * Downloads the file body.
      * 
      * @param name
      *            field name

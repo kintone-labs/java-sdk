@@ -49,18 +49,36 @@ public class Record {
         this.id = id;
     }
 
+    /**
+     * Gets the entry set of the record.
+     * @return the entry set of the record
+     */
     public Set<Map.Entry<String, Field>> getEntrySet() {
         return fields.entrySet();
     }
     
+    /**
+     * Gets the field name collection.
+     * @return the field names
+     */
     public Set<String> getFieldNames() {
         return fields.keySet();
     }
 
+    /**
+     * Gets the field object.
+     * @param name field name
+     * @return the field object
+     */
     public Field getField(String name) {
         return fields.get(name.toLowerCase());
     }
 
+    /**
+     * Adds a new field.
+     * @param name field name
+     * @param field field object
+     */
     public void addField(String name, Field field) {
         if (field.getFieldType() == FieldType.RECORD_NUMBER) {
             try {
@@ -73,49 +91,98 @@ public class Record {
         }
     }
 
+    /**
+     * Sets the record id.
+     * @param id record id
+     */
     public void setId(long id) {
         this.id = id;
     }
 
+    /**
+     * Gets the record id.
+     * @return the record id
+     */
     public Long getId() {
         return this.id;
     }
 
+    /**
+     * Returns true if the field value is empty.
+     * @param name field name
+     * @return true if the field value is empty
+     */
     public boolean isEmpty(String name) {
         return fields.get(name.toLowerCase()).isEmpty();
     }
     
+    /**
+     * Returns true if the field exists.
+     * @param name field name
+     * @return true if the field exists
+     */
     public boolean hasField(String name) {
         return fields.containsKey(name.toLowerCase());
     }
 
+    /**
+     * Gets the field value as long.
+     * @param name field name
+     * @return the long value of the field
+     */
     public Long getLong(String name) {
 
         return fields.get(name.toLowerCase()).getAsLong();
     }
 
+    /**
+     * Gets the field value as string.
+     * @param name field name
+     * @return the string value of the field
+     */
     public String getString(String name) {
 
         return fields.get(name.toLowerCase()).getAsString();
     }
 
+    /**
+     * Gets the field value as string list.
+     * @param name field name
+     */
     public List<String> getStrings(String name) {
         return fields.get(name.toLowerCase()).getAsStringList();
     }
 
+    /**
+     * Gets the field value as file list.
+     * @param name field name
+     */
     public List<FileDto> getFiles(String name) {
 
         return fields.get(name.toLowerCase()).getAsFileList();
     }
 
+    /**
+     * Gets the field value as a user object.
+     * @param name field name
+     */
+
     public UserDto getUser(String name) {
         return fields.get(name.toLowerCase()).getAsUserInfo();
     }
 
+    /**
+     * Gets the field value as user list.
+     * @param name field name
+     */
     public List<UserDto> getUsers(String name) {
         return fields.get(name.toLowerCase()).getAsUserList();
     }
 
+    /**
+     * Gets the field value as a date object.
+     * @param name field name
+     */
     public Date getDate(String name) {
         String strDate = fields.get(name.toLowerCase()).getAsString();
         try {
@@ -127,20 +194,39 @@ public class Record {
         }
     }
 
+    /**
+     * Gets the field value as a sub table.
+     * @param name field name
+     */
     public List<Record> getSubtable(String name) {
         return fields.get(name.toLowerCase()).getAsSubtable();
     }
     
+    /**
+     * Adds a new field and sets the string value.
+     * @param name field name
+     * @param value field value
+     */
     public void setString(String name, String value) {
         Field field = new Field(name, FieldType.SINGLE_LINE_TEXT, value);
         addField(name, field);
     }
 
+    /**
+     * Adds a new field and sets the long value.
+     * @param name field name
+     * @param value field value
+     */
     public void setLong(String name, long value) {
         Field field = new Field(name, FieldType.NUMBER, Long.valueOf(value));
         addField(name, field);
     }
 
+    /**
+     * Adds a new field and sets the user object.
+     * @param name field name
+     * @param codes field value
+     */
     public void setUsers(String name, List<String> codes) {
         List<UserDto> list = new ArrayList<UserDto>();
         for (String code : codes) {
@@ -152,10 +238,21 @@ public class Record {
         addField(name, field);
     }
 
+    /**
+     * Adds a new field and sets the file object.
+     * @param name
+     * @param file field value
+     */
     public void setFile(String name, File file) {
         setFile(name, file, null);
     }
     
+    /**
+     * Adds a new field and sets the file object.
+     * @param name field name
+     * @param file file object
+     * @param contentType content type
+     */
     public void setFile(String name, File file, String contentType) {
         Field field = new Field(name, FieldType.FILE, null);
         LazyUploader uploader = new FileLazyUploader(file, contentType);
@@ -163,10 +260,23 @@ public class Record {
         addField(name, field);
     }
     
+    /**
+     * Adds a new field and sets the file stream.
+     * @param name field name
+     * @param file file object
+     * @param fileName file name
+     */
     public void setFile(String name, InputStream file, String fileName) {
         setFile(name, file, fileName, null);
     }
     
+    /**
+     * Adds a new field and sets the file stream.
+     * @param name field name
+     * @param file file stream
+     * @param fileName file name
+     * @param contentType content type
+     */
     public void setFile(String name, InputStream file, String fileName, String contentType) {
         Field field = new Field(name, FieldType.FILE, null);
         LazyUploader uploader = new InputStreamLazyUploader(file, fileName, contentType);
@@ -174,6 +284,11 @@ public class Record {
         addField(name, field);
     }
     
+    /**
+     * Adds a new field and sets the file keys.
+     * @param name field name
+     * @param fileKeys list of the file keys
+     */
     public void setFiles(String name, List<String> fileKeys) {
         List<FileDto> list = new ArrayList<FileDto>();
         for (String key : fileKeys) {
@@ -185,6 +300,11 @@ public class Record {
         addField(name, field);
     }
 
+    /**
+     * Adds a new field and sets the string list.
+     * @param name field name
+     * @param values field value
+     */
     public void setStrings(String name, List<String> values) {
         List<String> list = new ArrayList<String>();
         for (String value : values) {
@@ -194,6 +314,11 @@ public class Record {
         addField(name, field);
     }
 
+    /**
+     * Adds a new field and sets the date value.
+     * @param name field name
+     * @param date field value
+     */
     public void setDate(String name, Date date) {
         DateFormat df = new SimpleDateFormat(DATE_PATTERN);
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -201,6 +326,11 @@ public class Record {
         setString(name, strDate);
     }
     
+    /**
+     * Adds a new field and sets the sub table.
+     * @param name field name
+     * @param value field value
+     */
     public void setSubtable(String name, List<Record> value) {
         Field field = new Field(name, FieldType.SUBTABLE, value);
         addField(name, field);

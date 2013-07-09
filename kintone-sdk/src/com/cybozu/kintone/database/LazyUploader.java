@@ -3,7 +3,7 @@ package com.cybozu.kintone.database;
 import com.cybozu.kintone.database.exception.DBException;
 
 /**
- * An interface wrapped lazy file uploading
+ * An interface wrapped lazy file uploading.
  *
  */
 public interface LazyUploader {

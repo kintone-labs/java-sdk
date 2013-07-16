@@ -71,7 +71,7 @@ public class Record {
      * @return the field object
      */
     public Field getField(String name) {
-        return fields.get(name.toLowerCase());
+        return fields.get(name);
     }
 
     /**
@@ -87,7 +87,7 @@ public class Record {
                 e.printStackTrace();
             }
         } else {
-            fields.put(name.toLowerCase(), field);
+            fields.put(name, field);
         }
     }
 
@@ -113,7 +113,7 @@ public class Record {
      * @return true if the field value is empty
      */
     public boolean isEmpty(String name) {
-        return fields.get(name.toLowerCase()).isEmpty();
+        return fields.get(name).isEmpty();
     }
     
     /**
@@ -122,7 +122,7 @@ public class Record {
      * @return true if the field exists
      */
     public boolean hasField(String name) {
-        return fields.containsKey(name.toLowerCase());
+        return fields.containsKey(name);
     }
 
     /**
@@ -132,7 +132,7 @@ public class Record {
      */
     public Long getLong(String name) {
 
-        return fields.get(name.toLowerCase()).getAsLong();
+        return fields.get(name).getAsLong();
     }
 
     /**
@@ -142,7 +142,7 @@ public class Record {
      */
     public String getString(String name) {
 
-        return fields.get(name.toLowerCase()).getAsString();
+        return fields.get(name).getAsString();
     }
 
     /**
@@ -150,7 +150,7 @@ public class Record {
      * @param name field name
      */
     public List<String> getStrings(String name) {
-        return fields.get(name.toLowerCase()).getAsStringList();
+        return fields.get(name).getAsStringList();
     }
 
     /**
@@ -159,7 +159,7 @@ public class Record {
      */
     public List<FileDto> getFiles(String name) {
 
-        return fields.get(name.toLowerCase()).getAsFileList();
+        return fields.get(name).getAsFileList();
     }
 
     /**
@@ -168,7 +168,7 @@ public class Record {
      */
 
     public UserDto getUser(String name) {
-        return fields.get(name.toLowerCase()).getAsUserInfo();
+        return fields.get(name).getAsUserInfo();
     }
 
     /**
@@ -176,7 +176,7 @@ public class Record {
      * @param name field name
      */
     public List<UserDto> getUsers(String name) {
-        return fields.get(name.toLowerCase()).getAsUserList();
+        return fields.get(name).getAsUserList();
     }
 
     /**
@@ -184,7 +184,7 @@ public class Record {
      * @param name field name
      */
     public Date getDate(String name) {
-        String strDate = fields.get(name.toLowerCase()).getAsString();
+        String strDate = fields.get(name).getAsString();
         try {
             DateFormat df = new SimpleDateFormat(DATE_PATTERN);
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -199,7 +199,7 @@ public class Record {
      * @param name field name
      */
     public List<Record> getSubtable(String name) {
-        return fields.get(name.toLowerCase()).getAsSubtable();
+        return fields.get(name).getAsSubtable();
     }
     
     /**

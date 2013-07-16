@@ -36,7 +36,7 @@ public class Field {
      * @param value field value
      */
     public Field(String name, FieldType type, Object value) {
-        this.name = name.toLowerCase();
+        this.name = name;
         this.fieldType = type;
         this.value = value;
     }
@@ -54,7 +54,7 @@ public class Field {
      * @param name field name
      */
     public void setName(String name) {
-        this.name = name.toLowerCase();
+        this.name = name;
     }
 
     /**

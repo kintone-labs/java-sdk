@@ -66,7 +66,7 @@ import com.cybozu.kintone.database.exception.ParseException;
  * 
  */
 public class Connection {
-    public static final String DEFAULT_CONTENT_TYPE = "application/octetÅ|stream";
+    public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
     
     private final String AUTH_HEADER = "X-Cybozu-Authorization";
     private final String JSON_CONTENT = "application/json";

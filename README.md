@@ -17,4 +17,6 @@ You can install kintone SDK for Java on a computer. Perform the following steps 
 
 ## How to use
 Run [samples] application.
-See cybozu.com Developer Center for more details.
+See developer site for more details.
+English: http://developers.kintone.com/
+Japanese: http://developers.cybozu.com/

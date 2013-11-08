@@ -35,7 +35,8 @@ import com.cybozu.kintone.database.exception.TypeMismatchException;
  * 
  */
 public class Record {
-    static public final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    static public final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    static public final String DATE_PATTERN = "yyyy-MM-dd";
     
     private long id;
 
@@ -178,13 +179,30 @@ public class Record {
     public List<UserDto> getUsers(String name) {
         return fields.get(name).getAsUserList();
     }
-
+    
+    /**
+     * Gets the field value as a date object.
+     * @param name field name
+     */
+    public Date getDateTime(String name) {
+        String strDate = fields.get(name).getAsString();
+        if (strDate == null || strDate.isEmpty()) return null;
+        try {
+            DateFormat df = new SimpleDateFormat(DATETIME_PATTERN);
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return df.parse(strDate);
+        } catch (ParseException e) {
+            throw new TypeMismatchException();
+        }
+    }
+    
     /**
      * Gets the field value as a date object.
      * @param name field name
      */
     public Date getDate(String name) {
         String strDate = fields.get(name).getAsString();
+        if (strDate == null || strDate.isEmpty()) return null;
         try {
             DateFormat df = new SimpleDateFormat(DATE_PATTERN);
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -314,6 +332,18 @@ public class Record {
         addField(name, field);
     }
 
+    /**
+     * Adds a new field and sets the date time value.
+     * @param name field name
+     * @param date field value
+     */
+    public void setDateTime(String name, Date date) {
+        DateFormat df = new SimpleDateFormat(DATETIME_PATTERN);
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String strDate = df.format(date);
+        setString(name, strDate);
+    }
+    
     /**
      * Adds a new field and sets the date value.
      * @param name field name

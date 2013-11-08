@@ -369,6 +369,7 @@ public class JsonParser {
                 writer.beginArray();
                 List<Record> subtable = field.getAsSubtable();
                 writeSubtable(writer, subtable);
+                writer.endArray();
                 break;
             default:
                 writer.value("");

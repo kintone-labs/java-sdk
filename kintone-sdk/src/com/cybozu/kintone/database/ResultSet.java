@@ -231,6 +231,17 @@ public class ResultSet {
     public Date getDate(String name) {
         return current.getDate(name);
     }
+    
+    /**
+     * Gets the field value as date time.
+     * 
+     * @param name
+     *            field name
+     * @return a date object
+     */
+    public Date getDateTime(String name) {
+        return current.getDateTime(name);
+    }
 
     /**
      * Gets the field value as a sub table.

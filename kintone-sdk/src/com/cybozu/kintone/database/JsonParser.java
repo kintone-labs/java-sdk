@@ -29,10 +29,8 @@
 
 package com.cybozu.kintone.database;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -48,7 +46,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 /**
@@ -463,18 +460,18 @@ public class JsonParser {
      * @throws IOException
      */
     public List<Long> jsonToIDs(String json) throws IOException {
-        ByteArrayInputStream in = new ByteArrayInputStream(json.getBytes());
-        JsonReader reader = new JsonReader(new InputStreamReader(in));
-
-        reader.beginObject();
-        reader.nextName();
-
-        Gson gson = new Gson();
-        Type listType = new TypeToken<ArrayList<Long>>() {}.getType();
-        List<Long> ids = gson.fromJson(reader, listType);
-
-        reader.endObject();
-
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        List<Long> ids = new ArrayList<Long>();
+        if (root.isJsonObject()) {
+            JsonArray jsonIds = root.getAsJsonObject().get("ids").getAsJsonArray();
+            for (JsonElement elem: jsonIds) {
+                Long id = new Long(elem.getAsString());
+                ids.add(id);
+            }
+        }
+        
         return ids;
     }
 
@@ -532,14 +529,14 @@ public class JsonParser {
      * @throws IOException
      */
     public String jsonToFileKey(String json) throws IOException {
-        ByteArrayInputStream in = new ByteArrayInputStream(json.getBytes());
-        JsonReader reader = new JsonReader(new InputStreamReader(in));
-
-        reader.beginObject();
-        reader.nextName();
-        String fileKey = reader.nextString();
-        reader.endObject();
-        reader.close();
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        String fileKey = null;
+        if (root.isJsonObject()) {
+            fileKey = root.getAsJsonObject().get("fileKey").getAsString();
+        }
+        
         return fileKey;
     }
 }

@@ -1,10 +1,10 @@
 # kintone SDK for Java
 
-version 0.1
+version 0.2
 
 ## Requirements
 
-* JDK 6 or later
+* JDK 7 or later
 
 ## Install
 You can install kintone SDK for Java on a computer. Perform the following steps to install.

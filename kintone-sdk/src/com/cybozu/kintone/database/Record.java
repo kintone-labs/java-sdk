@@ -39,15 +39,22 @@ public class Record {
     static public final String DATE_PATTERN = "yyyy-MM-dd";
     
     private long id;
+    private long revision;
 
     private HashMap<String, Field> fields = new HashMap<String, Field>();
 
     public Record() {
         this.id = 0;
+        this.revision = -1;
     }
 
     public Record(long id) {
         this.id = id;
+    }
+    
+    public Record(long id, long revision) {
+        this.id = id;
+        this.revision = revision;
     }
 
     /**
@@ -87,6 +94,12 @@ public class Record {
             } catch (TypeMismatchException e) {
                 e.printStackTrace();
             }
+        } else if (field.getFieldType() == FieldType.__REVISION__) {
+            try {
+                setRevision(field.getAsLong());
+            } catch (TypeMismatchException e) {
+                e.printStackTrace();
+            }
         } else {
             fields.put(name, field);
         }
@@ -107,7 +120,31 @@ public class Record {
     public Long getId() {
         return this.id;
     }
+    
+    /**
+     * Sets the revision number.
+     * @param revision revision number
+     */
+    public void setRevision(long revision) {
+        this.revision = revision;
+    }
+    
+    /**
+     * Gets the revision number.
+     * @return the revision number
+     */
+    public Long getRevision() {
+        return this.revision;
+    }
 
+    /**
+     * Returns true if the revision number is set.
+     * @return true if the revision number is set.
+     */
+    public boolean hasRevision() {
+        return this.revision >= 0;
+    }
+    
     /**
      * Returns true if the field value is empty.
      * @param name field name

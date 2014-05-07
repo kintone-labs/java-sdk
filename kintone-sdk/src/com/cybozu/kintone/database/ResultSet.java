@@ -121,6 +121,15 @@ public class ResultSet {
     public Long getId() {
         return current.getId();
     }
+    
+    /**
+     * Gets the revision number of the record.
+     * 
+     * @return revision number
+     */
+    public Long getRevision() {
+        return current.getRevision();
+    }
 
     /**
      * Gets the count of the record set.

@@ -170,7 +170,7 @@ public class SdkSample {
 
         // update records
         try {
-            db.update(app, query, record);
+            db.updateByQuery(app, query, record);
         } catch (DBException e1) {
             e1.printStackTrace();
         }
@@ -191,7 +191,7 @@ public class SdkSample {
 
         // delete records
         try {
-            db.delete(app, "code = 123");
+            db.deleteByQuery(app, "code = 123");
         } catch (DBException e1) {
             e1.printStackTrace();
         }

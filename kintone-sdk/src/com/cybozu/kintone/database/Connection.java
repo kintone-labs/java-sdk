@@ -650,6 +650,21 @@ public class Connection {
      *            application id
      * @param query
      *            query string
+     * @return ResultSet object
+     * @throws DBException
+     */
+    public ResultSet select(long app, String query)
+            throws DBException {
+        return select(app, query, null);
+    }
+
+    /**
+     * Selects the records from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
      * @param columns
      *            column names if needed
      * @return ResultSet object
@@ -695,13 +710,19 @@ public class Connection {
      * @param app
      *            application id
      * @param record
-     *            Record object to be inserted
+     *            The Record object to be inserted
+     * @return The id number of inserted record
      * @throws DBException
      */
-    public void insert(long app, Record record) throws DBException {
+    public long insert(long app, Record record) throws DBException {
         List<Record> list = new ArrayList<Record>();
         list.add(record);
-        insert(app, list);
+        List<Long> ids = insert(app, list);
+        
+        if (ids.size() > 0) {
+            return ids.get(0);
+        }
+        throw new DBException("Failed to insert new record.");
     }
 
     /**
@@ -727,7 +748,8 @@ public class Connection {
      * @param app
      *            application id
      * @param records
-     *            an array of Record objects to be inserted
+     *            The array of Record objects to be inserted
+     * @return The list of inserted id number
      * @throws DBException
      */
     public List<Long> insert(long app, List<Record> records) throws DBException {
@@ -758,7 +780,7 @@ public class Connection {
     }
 
     /**
-     * Updates a record.
+     * Updates a record(deprecated).
      * 
      * @param app
      *            application id
@@ -772,6 +794,21 @@ public class Connection {
         List<Long> list = new ArrayList<Long>();
         list.add(id);
         update(app, list, record);
+    }
+
+    /**
+     * Updates a record.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            updated record object
+     * @throws DBException
+     */
+    public void updateByRecord(long app, Record record) throws DBException {
+        List<Record> list = new ArrayList<Record>();
+        list.add(record);
+        updateByRecords(app, list);
     }
 
     /**
@@ -810,13 +847,43 @@ public class Connection {
      * 
      * @param app
      *            application id
+     * @param records
+     *            an array of the updated record object
+     * @throws DBException
+     */
+    public void updateByRecords(long app, List<Record> records) throws DBException {
+        // upload files
+        for (Record record: records) {
+            Set<Map.Entry<String,Field>> set = record.getEntrySet();
+            for (Map.Entry<String,Field> entry: set) {
+                Field field = entry.getValue();
+                lazyUpload(field); // force lazy upload
+            }
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdate(app, records);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("PUT", "records.json", json);
+    }
+    
+    /**
+     * Updates records.
+     * 
+     * @param app
+     *            application id
      * @param query
      *            query string to determine the updated records
      * @param record
      *            updated record object
      * @throws DBException
      */
-    public void update(long app, String query, Record record)
+    public void updateByQuery(long app, String query, Record record)
             throws DBException {
         String[] fields = {};
         ResultSet rs = select(app, query, fields);
@@ -843,19 +910,57 @@ public class Connection {
      * @throws DBException
      */
     public void delete(long app, long id) throws DBException {
-        delete(app, new Long[] { id });
+        List<Long> list = new ArrayList<Long>();
+        list.add(id);
+        delete(app, list);
     }
 
+    /**
+     * Deletes a record.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            a record object to be deleted
+     * @throws DBException
+     */
+    public void deleteByRecord(long app, Record record) throws DBException {
+        List<Record> list = new ArrayList<Record>();
+        list.add(record);
+        deleteByRecords(app, list);
+    }
+    
     /**
      * Deletes records.
      * 
      * @param app
      *            application id
-     * @param ids
-     *            an array of record numbers to be deleted
+     * @param records
+     *            a list of the record object to be deleted
      * @throws DBException
      */
-    public void delete(long app, Long[] ids) throws DBException {
+    public void deleteByRecords(long app, List<Record> records) throws DBException {
+        
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForDelete(app, records);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("DELETE", "records.json", json);
+    }
+
+    /**
+     * Deletes records.
+     * @param app
+     *           application id
+     * @param ids
+     *           a list of record numbers to be deleted
+     * @throws DBException
+     */
+    public void delete(long app, List<Long> ids) throws DBException {
         StringBuilder sb = new StringBuilder();
         sb.append("app=");
         sb.append(app);
@@ -872,18 +977,6 @@ public class Connection {
 
     /**
      * Deletes records.
-     * @param app
-     *           application id
-     * @param ids
-     *           a list of record numbers to be deleted
-     * @throws DBException
-     */
-    public void delete(long app, List<Long> ids) throws DBException {
-        delete(app, ids.toArray(new Long[0]));
-    }
-
-    /**
-     * Deletes records.
      * 
      * @param app
      *            application id
@@ -891,7 +984,7 @@ public class Connection {
      *            query string to determine the deleted records
      * @throws DBException
      */
-    public void delete(long app, String query) throws DBException {
+    public void deleteByQuery(long app, String query) throws DBException {
         String[] fields = {};
         ResultSet rs = select(app, query, fields);
         List<Long> ids = new ArrayList<Long>();
@@ -903,7 +996,7 @@ public class Connection {
             ids.add(rs.getId());
         }
         try {
-            delete(app, ids.toArray(new Long[0]));
+            delete(app, ids);
         } catch (DBNotFoundException e) {
 
         }

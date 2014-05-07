@@ -20,7 +20,31 @@ package com.cybozu.kintone.database;
  */
 public enum FieldType {
 
-    SINGLE_LINE_TEXT, NUMBER, CALC, MULTI_LINE_TEXT, RICH_TEXT, CHECK_BOX, RADIO_BUTTON, DROP_DOWN, MULTI_SELECT, FILE, DATE, TIME, DATETIME, USER_SELECT, LINK, CATEGORY, STATUS, RECORD_NUMBER, CREATOR, CREATED_TIME, MODIFIER, UPDATED_TIME, STATUS_ASSIGNEE, SUBTABLE;
+    SINGLE_LINE_TEXT, 
+    NUMBER, 
+    CALC, 
+    MULTI_LINE_TEXT, 
+    RICH_TEXT, 
+    CHECK_BOX, 
+    RADIO_BUTTON, 
+    DROP_DOWN, 
+    MULTI_SELECT, 
+    FILE, 
+    DATE, 
+    TIME, 
+    DATETIME, 
+    USER_SELECT, 
+    LINK, 
+    CATEGORY, 
+    STATUS, 
+    RECORD_NUMBER, 
+    CREATOR, 
+    CREATED_TIME, 
+    MODIFIER, 
+    UPDATED_TIME, 
+    STATUS_ASSIGNEE, 
+    SUBTABLE,
+    __REVISION__;
 
     public static FieldType getEnum(String str) {
         FieldType[] values = FieldType.values();

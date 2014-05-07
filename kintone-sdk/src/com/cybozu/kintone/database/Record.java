@@ -34,7 +34,7 @@ import com.cybozu.kintone.database.exception.TypeMismatchException;
  * or store data by using this class.
  * 
  */
-public class Record {
+public class Record implements Cloneable {
     static public final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     static public final String DATE_PATTERN = "yyyy-MM-dd";
     
@@ -55,6 +55,20 @@ public class Record {
     public Record(long id, long revision) {
         this.id = id;
         this.revision = revision;
+    }
+    
+    /**
+     * Clones this instance.
+     * @return the duplicated record object
+     */
+    public Object clone() {
+        Record record = new Record(this.id, this.revision);
+        
+        for (String key: fields.keySet()) {
+            Field field = fields.get(key);
+            record.addField(key, field);
+        }
+        return record;
     }
 
     /**

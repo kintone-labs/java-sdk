@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.cybozu.kintone.database.BulkRequest;
 import com.cybozu.kintone.database.Connection;
 import com.cybozu.kintone.database.FileDto;
 import com.cybozu.kintone.database.Record;
@@ -66,39 +67,21 @@ public class SdkSample {
         }
         while (rs.next()) {
             try {
+                // record number
                 long recNo = rs.getId();
+                // number field
                 long code = rs.getLong("code");
+                // date field
                 Date created = rs.getDate("created_time");
+                // user field
                 UserDto creator = rs.getUser("creator");
+                // string field
                 String name = rs.getString("name");
+                // check box
                 List<String> strings = rs.getStrings("checkbox");
+                // sub table
                 List<Record> subtable = rs.getSubtable("table1");
                 
-                StringBuilder sb = new StringBuilder();
-                sb.append("no:" + recNo);
-                sb.append(",code:" + code);
-                sb.append(",created:" + created);
-                sb.append(",name:" + name);
-                sb.append(",check:");
-                if (strings.size() > 0) {
-                    for (String s : strings) {
-                        sb.append("[");
-                        sb.append(s);
-                        sb.append("]");
-                    }
-                }
-                if (subtable.size() > 0) {
-                    for (Record r : subtable) {
-                        sb.append("[");
-                        sb.append(r.getFieldNames().toString());
-                        sb.append("]");
-                    }
-                }
-                sb.append(",creator:");
-                sb.append(creator.getName());
-
-                System.out.println(sb.toString());
-
                 // download file
                 List<FileDto> files = rs.getFiles("file");
                 if (files.size() > 0) {
@@ -196,6 +179,39 @@ public class SdkSample {
             e1.printStackTrace();
         }
 
+        // bulk request
+        List<Record> records = new ArrayList<Record>();
+        try {
+            rs = db.select(app, "");
+            while (rs.next()) {
+                record = new Record();
+                record.setId(rs.getId());
+                record.setRevision(rs.getRevision());
+                record.setString("name", "hoge");
+                
+                records.add(record);
+            }
+            
+            BulkRequest bulk = new BulkRequest();
+            bulk.updateByRecords(app, records);
+            
+            records = new ArrayList<Record>();
+    
+            record = new Record();
+            record.setString("name", "fuga");
+            records.add(record);
+            record = new Record();
+            record.setString("name", "piyo");
+            records.add(record);
+            bulk.insert(app, records);
+            
+            bulk.delete(app, ids);
+            
+            db.bulkRequest(bulk);
+        } catch (DBException e1) {
+            e1.printStackTrace();
+        }
+        
         db.close();
 
     }

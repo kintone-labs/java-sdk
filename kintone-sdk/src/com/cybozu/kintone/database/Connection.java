@@ -391,7 +391,7 @@ public class Connection {
             throw new DBException("can not open connection");
         }
         boolean post = false;
-        if (method.equals("PUT") || method.equals("POST")) {
+        if (method.equals("PUT") || method.equals("POST") || method.equals("DELETE")) {
             post = true;
         }
 
@@ -948,7 +948,7 @@ public class Connection {
         } catch (IOException e) {
             throw new ParseException("failed to encode to json");
         }
-
+        
         request("DELETE", "records.json", json);
     }
 
@@ -961,18 +961,13 @@ public class Connection {
      * @throws DBException
      */
     public void delete(long app, List<Long> ids) throws DBException {
-        StringBuilder sb = new StringBuilder();
-        sb.append("app=");
-        sb.append(app);
-        int i = 0;
+        List<Record> records = new ArrayList<Record>();
         for (Long id : ids) {
-            sb.append("&ids[" + i + "]=");
-            sb.append(id);
-            i++;
+            Record record = new Record();
+            record.setId(id);
+            records.add(record);
         }
-        String api = new String(sb);
-
-        request("DELETE", "records.json?" + api, null);
+        deleteByRecords(app, records);
     }
 
     /**
@@ -987,19 +982,17 @@ public class Connection {
     public void deleteByQuery(long app, String query) throws DBException {
         String[] fields = {};
         ResultSet rs = select(app, query, fields);
-        List<Long> ids = new ArrayList<Long>();
+        List<Record> records = new ArrayList<Record>();
 
         if (rs.size() == 0)
             return;
 
         while (rs.next()) {
-            ids.add(rs.getId());
+            Record record = new Record();
+            record.setId(rs.getId());
+            records.add(record);
         }
-        try {
-            delete(app, ids);
-        } catch (DBNotFoundException e) {
-
-        }
+        deleteByRecords(app, records);
     }
 
     /**
@@ -1065,5 +1058,19 @@ public class Connection {
 
         request("GET", "file.json?fileKey=" + fileKey, null, tempFile);
         return tempFile;
+    }
+    
+    /**
+     * Build update.
+     * 
+     * @param build
+     *            an instance of bulk request
+     * @throws DBException
+     */
+    public void bulkRequest(BulkRequest bulk) throws DBException {
+        
+        String json = bulk.getJson();
+        
+        request("POST", "bulkRequest.json", json);
     }
 }

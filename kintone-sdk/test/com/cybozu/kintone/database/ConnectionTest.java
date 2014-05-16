@@ -2,7 +2,10 @@ package com.cybozu.kintone.database;
 
 import static org.junit.Assert.*;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
@@ -62,6 +65,22 @@ public class ConnectionTest {
     }
     
     @Test
+    public void testApiToken() {
+        String domain = System.getenv("DOMAIN");
+        String apiToken = "lzrxAeavY4RI99c9146xzZq4U7gkOj3uvMTMt5QS";
+        
+        Connection db = new Connection(domain, apiToken);
+        //db.setProxy("127.0.0.1", 8888); // for fiddler2
+        //db.setTrustAllHosts(true);
+        long app = getAppId();
+        try {
+            db.select(app, "Record_number > 0");
+        } catch(Exception e) {
+            fail("Can not use api token");
+        }
+    }
+    
+    @Test
     public void testSelect() {
         Connection db = getConnection();
         long app = getAppId();
@@ -110,6 +129,45 @@ public class ConnectionTest {
             ResultSet rs = db.select(app, "");
             if (rs.size() != 1) {
                 fail("invalid count");
+            }
+            
+        } catch(Exception e) {
+            fail("db exception:" + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testInsertCreatorModifier() {
+        Connection db = getConnection();
+        long app = getAppId();
+        try {
+            Record record;
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+            Date date = df.parse("2000-01-01 01:34");
+            record = new Record();
+            record.setUser("Created_by", "aono");
+            record.setUser("Updated_by", "aono");
+            record.setDateTime("Created_datetime", date);
+            record.setDateTime("Updated_datetime", date);
+            
+            db.insert(app, record);
+            
+            ResultSet rs = db.select(app, "");
+            if (rs.size() != 1) {
+                fail("invalid count");
+            }
+            rs.first();
+            if (!rs.getUser("Created_by").getCode().equals("aono")) {
+                fail("failed to update created by");
+            }
+            if (!rs.getUser("Updated_by").getCode().equals("aono")) {
+                fail("failed to update updated by");
+            }
+            if (!rs.getDateTime("Created_datetime").equals(date)) {
+                fail("failed to update created datetime" + rs.getDate("Created_datetime").toString());
+            }
+            if (!rs.getDateTime("Updated_datetime").equals(date)) {
+                fail("failed to update updated datetime" + rs.getDate("Updated_datetime").toString());
             }
             
         } catch(Exception e) {

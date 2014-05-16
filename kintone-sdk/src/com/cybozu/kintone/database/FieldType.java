@@ -44,7 +44,8 @@ public enum FieldType {
     UPDATED_TIME, 
     STATUS_ASSIGNEE, 
     SUBTABLE,
-    __REVISION__;
+    __REVISION__,
+    __ID__;
 
     public static FieldType getEnum(String str) {
         FieldType[] values = FieldType.values();

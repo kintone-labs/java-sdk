@@ -69,6 +69,7 @@ public class Connection {
     public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
     
     private final String AUTH_HEADER = "X-Cybozu-Authorization";
+    private final String API_TOKEN = "X-Cybozu-API-Token";
     private final String JSON_CONTENT = "application/json";
     private final String API_PREFIX = "/k/v1/";
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
@@ -80,6 +81,7 @@ public class Connection {
 
     private String domain;
     private String auth;
+    private String apiToken;
     private Proxy proxy;
     private String userAgent = USER_AGENT_VALUE;
     private boolean trustAllHosts; // for debug
@@ -103,6 +105,24 @@ public class Connection {
         this.domain = domain;
         this.auth = (new BASE64Encoder()).encode((login + ":" + password)
                 .getBytes());
+        this.apiToken = null;
+    }
+    
+    /**
+     * Constructor
+     * 
+     * @param domain
+     *            domain name. if your FQDN is "example.cybozu.com", domain name
+     *            is "example".
+     * @param apiToken
+     *            api Token
+     */
+    public Connection(String domain, String apiToken) {
+        this.trustAllHosts = false;
+        this.useClientCert = false;
+        this.domain = domain;
+        this.auth = null;
+        this.apiToken = apiToken;
     }
 
     /**
@@ -137,6 +157,7 @@ public class Connection {
     public void close() {
         auth = null;
         proxy = null;
+        apiToken = null;
         headers.clear();
         this.trustAllHosts = false;
         this.useClientCert = false;
@@ -336,7 +357,11 @@ public class Connection {
      * @param conn connection object
      */
     private void setHTTPHeaders(HttpURLConnection conn) {
-        conn.setRequestProperty(AUTH_HEADER, this.auth);
+        if (this.apiToken != null) {
+            conn.setRequestProperty(API_TOKEN, this.apiToken);
+        } else {
+            conn.setRequestProperty(AUTH_HEADER, this.auth);
+        }
         conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
         for (String header : this.headers.keySet()) {
             conn.setRequestProperty(header, this.headers.get(header));
@@ -980,8 +1005,7 @@ public class Connection {
      * @throws DBException
      */
     public void deleteByQuery(long app, String query) throws DBException {
-        String[] fields = {};
-        ResultSet rs = select(app, query, fields);
+        ResultSet rs = select(app, query);
         List<Record> records = new ArrayList<Record>();
 
         if (rs.size() == 0)

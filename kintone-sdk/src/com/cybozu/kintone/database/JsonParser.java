@@ -163,10 +163,11 @@ public class JsonParser {
             case DROP_DOWN:
             case LINK:
             case STATUS:
+            case RECORD_NUMBER:
                 object = element.getAsString();
                 break;
             case NUMBER:
-            case RECORD_NUMBER:
+            case __ID__:
             case __REVISION__:
                 strVal = element.getAsString();
                 try {

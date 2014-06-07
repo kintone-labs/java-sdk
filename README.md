@@ -1,6 +1,6 @@
 # kintone SDK for Java
 
-version 0.2
+version 0.3
 
 ## Requirements
 

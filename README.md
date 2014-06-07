@@ -1,10 +1,10 @@
 # kintone SDK for Java
 
-version 0.1
+version 0.3
 
 ## Requirements
 
-* JDK 6 or later
+* JDK 7 or later
 
 ## Install
 You can install kintone SDK for Java on a computer. Perform the following steps to install.
@@ -15,8 +15,21 @@ You can install kintone SDK for Java on a computer. Perform the following steps 
 * Select this directory as root directory and check kintone-sdk and samples.
 * Click [finish] button.
 
-## How to use
+## How to Use
 Run [samples] application.
 See developer site for more details.
 * English: http://developers.kintone.com/
-* Japanese: http://developers.cybozu.com/
+* Japanese: https://cybozudev.zendesk.com/
+
+## Release Notes
+
+v 0.3
+* Support for the new authentication feature using API token
+* $id built-in field is used as record id.
+
+v 0.2
+* Support for optimistic locking using a revision number
+* Support for bulk request
+
+v 0.1
+* New release

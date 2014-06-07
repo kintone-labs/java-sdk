@@ -69,6 +69,7 @@ public class Connection {
     public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
     
     private final String AUTH_HEADER = "X-Cybozu-Authorization";
+    private final String API_TOKEN = "X-Cybozu-API-Token";
     private final String JSON_CONTENT = "application/json";
     private final String API_PREFIX = "/k/v1/";
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
@@ -80,6 +81,7 @@ public class Connection {
 
     private String domain;
     private String auth;
+    private String apiToken;
     private Proxy proxy;
     private String userAgent = USER_AGENT_VALUE;
     private boolean trustAllHosts; // for debug
@@ -103,6 +105,24 @@ public class Connection {
         this.domain = domain;
         this.auth = (new BASE64Encoder()).encode((login + ":" + password)
                 .getBytes());
+        this.apiToken = null;
+    }
+    
+    /**
+     * Constructor
+     * 
+     * @param domain
+     *            domain name. if your FQDN is "example.cybozu.com", domain name
+     *            is "example".
+     * @param apiToken
+     *            api Token
+     */
+    public Connection(String domain, String apiToken) {
+        this.trustAllHosts = false;
+        this.useClientCert = false;
+        this.domain = domain;
+        this.auth = null;
+        this.apiToken = apiToken;
     }
 
     /**
@@ -137,6 +157,7 @@ public class Connection {
     public void close() {
         auth = null;
         proxy = null;
+        apiToken = null;
         headers.clear();
         this.trustAllHosts = false;
         this.useClientCert = false;
@@ -336,7 +357,11 @@ public class Connection {
      * @param conn connection object
      */
     private void setHTTPHeaders(HttpURLConnection conn) {
-        conn.setRequestProperty(AUTH_HEADER, this.auth);
+        if (this.apiToken != null) {
+            conn.setRequestProperty(API_TOKEN, this.apiToken);
+        } else {
+            conn.setRequestProperty(AUTH_HEADER, this.auth);
+        }
         conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
         for (String header : this.headers.keySet()) {
             conn.setRequestProperty(header, this.headers.get(header));
@@ -391,7 +416,7 @@ public class Connection {
             throw new DBException("can not open connection");
         }
         boolean post = false;
-        if (method.equals("PUT") || method.equals("POST")) {
+        if (method.equals("PUT") || method.equals("POST") || method.equals("DELETE")) {
             post = true;
         }
 
@@ -650,6 +675,21 @@ public class Connection {
      *            application id
      * @param query
      *            query string
+     * @return ResultSet object
+     * @throws DBException
+     */
+    public ResultSet select(long app, String query)
+            throws DBException {
+        return select(app, query, null);
+    }
+
+    /**
+     * Selects the records from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
      * @param columns
      *            column names if needed
      * @return ResultSet object
@@ -695,13 +735,19 @@ public class Connection {
      * @param app
      *            application id
      * @param record
-     *            Record object to be inserted
+     *            The Record object to be inserted
+     * @return The id number of inserted record
      * @throws DBException
      */
-    public void insert(long app, Record record) throws DBException {
+    public long insert(long app, Record record) throws DBException {
         List<Record> list = new ArrayList<Record>();
         list.add(record);
-        insert(app, list);
+        List<Long> ids = insert(app, list);
+        
+        if (ids.size() > 0) {
+            return ids.get(0);
+        }
+        throw new DBException("Failed to insert new record.");
     }
 
     /**
@@ -727,7 +773,8 @@ public class Connection {
      * @param app
      *            application id
      * @param records
-     *            an array of Record objects to be inserted
+     *            The array of Record objects to be inserted
+     * @return The list of inserted id number
      * @throws DBException
      */
     public List<Long> insert(long app, List<Record> records) throws DBException {
@@ -758,7 +805,7 @@ public class Connection {
     }
 
     /**
-     * Updates a record.
+     * Updates a record(deprecated).
      * 
      * @param app
      *            application id
@@ -772,6 +819,21 @@ public class Connection {
         List<Long> list = new ArrayList<Long>();
         list.add(id);
         update(app, list, record);
+    }
+
+    /**
+     * Updates a record.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            updated record object
+     * @throws DBException
+     */
+    public void updateByRecord(long app, Record record) throws DBException {
+        List<Record> list = new ArrayList<Record>();
+        list.add(record);
+        updateByRecords(app, list);
     }
 
     /**
@@ -810,13 +872,43 @@ public class Connection {
      * 
      * @param app
      *            application id
+     * @param records
+     *            an array of the updated record object
+     * @throws DBException
+     */
+    public void updateByRecords(long app, List<Record> records) throws DBException {
+        // upload files
+        for (Record record: records) {
+            Set<Map.Entry<String,Field>> set = record.getEntrySet();
+            for (Map.Entry<String,Field> entry: set) {
+                Field field = entry.getValue();
+                lazyUpload(field); // force lazy upload
+            }
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdate(app, records);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("PUT", "records.json", json);
+    }
+    
+    /**
+     * Updates records.
+     * 
+     * @param app
+     *            application id
      * @param query
      *            query string to determine the updated records
      * @param record
      *            updated record object
      * @throws DBException
      */
-    public void update(long app, String query, Record record)
+    public void updateByQuery(long app, String query, Record record)
             throws DBException {
         String[] fields = {};
         ResultSet rs = select(app, query, fields);
@@ -843,31 +935,46 @@ public class Connection {
      * @throws DBException
      */
     public void delete(long app, long id) throws DBException {
-        delete(app, new Long[] { id });
+        List<Long> list = new ArrayList<Long>();
+        list.add(id);
+        delete(app, list);
     }
 
+    /**
+     * Deletes a record.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            a record object to be deleted
+     * @throws DBException
+     */
+    public void deleteByRecord(long app, Record record) throws DBException {
+        List<Record> list = new ArrayList<Record>();
+        list.add(record);
+        deleteByRecords(app, list);
+    }
+    
     /**
      * Deletes records.
      * 
      * @param app
      *            application id
-     * @param ids
-     *            an array of record numbers to be deleted
+     * @param records
+     *            a list of the record object to be deleted
      * @throws DBException
      */
-    public void delete(long app, Long[] ids) throws DBException {
-        StringBuilder sb = new StringBuilder();
-        sb.append("app=");
-        sb.append(app);
-        int i = 0;
-        for (Long id : ids) {
-            sb.append("&ids[" + i + "]=");
-            sb.append(id);
-            i++;
+    public void deleteByRecords(long app, List<Record> records) throws DBException {
+        
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForDelete(app, records);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
         }
-        String api = new String(sb);
-
-        request("DELETE", "records.json?" + api, null);
+        
+        request("DELETE", "records.json", json);
     }
 
     /**
@@ -879,7 +986,13 @@ public class Connection {
      * @throws DBException
      */
     public void delete(long app, List<Long> ids) throws DBException {
-        delete(app, ids.toArray(new Long[0]));
+        List<Record> records = new ArrayList<Record>();
+        for (Long id : ids) {
+            Record record = new Record();
+            record.setId(id);
+            records.add(record);
+        }
+        deleteByRecords(app, records);
     }
 
     /**
@@ -891,22 +1004,19 @@ public class Connection {
      *            query string to determine the deleted records
      * @throws DBException
      */
-    public void delete(long app, String query) throws DBException {
-        String[] fields = {};
-        ResultSet rs = select(app, query, fields);
-        List<Long> ids = new ArrayList<Long>();
+    public void deleteByQuery(long app, String query) throws DBException {
+        ResultSet rs = select(app, query);
+        List<Record> records = new ArrayList<Record>();
 
         if (rs.size() == 0)
             return;
 
         while (rs.next()) {
-            ids.add(rs.getId());
+            Record record = new Record();
+            record.setId(rs.getId());
+            records.add(record);
         }
-        try {
-            delete(app, ids.toArray(new Long[0]));
-        } catch (DBNotFoundException e) {
-
-        }
+        deleteByRecords(app, records);
     }
 
     /**
@@ -972,5 +1082,19 @@ public class Connection {
 
         request("GET", "file.json?fileKey=" + fileKey, null, tempFile);
         return tempFile;
+    }
+    
+    /**
+     * Build update.
+     * 
+     * @param build
+     *            an instance of bulk request
+     * @throws DBException
+     */
+    public void bulkRequest(BulkRequest bulk) throws DBException {
+        
+        String json = bulk.getJson();
+        
+        request("POST", "bulkRequest.json", json);
     }
 }

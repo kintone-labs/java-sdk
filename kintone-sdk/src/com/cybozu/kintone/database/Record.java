@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 
 import com.cybozu.kintone.database.exception.TypeMismatchException;
 
@@ -34,32 +33,56 @@ import com.cybozu.kintone.database.exception.TypeMismatchException;
  * or store data by using this class.
  * 
  */
-public class Record {
+public class Record implements Cloneable {
     static public final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss'Z'";
     static public final String DATE_PATTERN = "yyyy-MM-dd";
-    
+
     private long id;
+    private long revision;
 
     private HashMap<String, Field> fields = new HashMap<String, Field>();
 
     public Record() {
-        this.id = 0;
+        this.id = -1;
+        this.revision = -1;
     }
 
     public Record(long id) {
         this.id = id;
     }
 
+    public Record(long id, long revision) {
+        this.id = id;
+        this.revision = revision;
+    }
+
+    /**
+     * Clones this instance.
+     * 
+     * @return the duplicated record object
+     */
+    public Object clone() {
+        Record record = new Record(this.id, this.revision);
+
+        for (String key : fields.keySet()) {
+            Field field = fields.get(key);
+            record.addField(key, field);
+        }
+        return record;
+    }
+
     /**
      * Gets the entry set of the record.
+     * 
      * @return the entry set of the record
      */
     public Set<Map.Entry<String, Field>> getEntrySet() {
         return fields.entrySet();
     }
-    
+
     /**
      * Gets the field name collection.
+     * 
      * @return the field names
      */
     public Set<String> getFieldNames() {
@@ -68,7 +91,9 @@ public class Record {
 
     /**
      * Gets the field object.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      * @return the field object
      */
     public Field getField(String name) {
@@ -77,13 +102,22 @@ public class Record {
 
     /**
      * Adds a new field.
-     * @param name field name
-     * @param field field object
+     * 
+     * @param name
+     *            field name
+     * @param field
+     *            field object
      */
     public void addField(String name, Field field) {
-        if (field.getFieldType() == FieldType.RECORD_NUMBER) {
+        if (field.getFieldType() == FieldType.__ID__) {
             try {
                 setId(field.getAsLong());
+            } catch (TypeMismatchException e) {
+                e.printStackTrace();
+            }
+        } else if (field.getFieldType() == FieldType.__REVISION__) {
+            try {
+                setRevision(field.getAsLong());
             } catch (TypeMismatchException e) {
                 e.printStackTrace();
             }
@@ -94,7 +128,9 @@ public class Record {
 
     /**
      * Sets the record id.
-     * @param id record id
+     * 
+     * @param id
+     *            record id
      */
     public void setId(long id) {
         this.id = id;
@@ -102,6 +138,7 @@ public class Record {
 
     /**
      * Gets the record id.
+     * 
      * @return the record id
      */
     public Long getId() {
@@ -109,17 +146,49 @@ public class Record {
     }
 
     /**
+     * Sets the revision number.
+     * 
+     * @param revision
+     *            revision number
+     */
+    public void setRevision(long revision) {
+        this.revision = revision;
+    }
+
+    /**
+     * Gets the revision number.
+     * 
+     * @return the revision number
+     */
+    public Long getRevision() {
+        return this.revision;
+    }
+
+    /**
+     * Returns true if the revision number is set.
+     * 
+     * @return true if the revision number is set.
+     */
+    public boolean hasRevision() {
+        return this.revision >= 0;
+    }
+
+    /**
      * Returns true if the field value is empty.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      * @return true if the field value is empty
      */
     public boolean isEmpty(String name) {
         return fields.get(name).isEmpty();
     }
-    
+
     /**
      * Returns true if the field exists.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      * @return true if the field exists
      */
     public boolean hasField(String name) {
@@ -128,7 +197,9 @@ public class Record {
 
     /**
      * Gets the field value as long.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      * @return the long value of the field
      */
     public Long getLong(String name) {
@@ -138,7 +209,9 @@ public class Record {
 
     /**
      * Gets the field value as string.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      * @return the string value of the field
      */
     public String getString(String name) {
@@ -148,7 +221,9 @@ public class Record {
 
     /**
      * Gets the field value as string list.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
     public List<String> getStrings(String name) {
         return fields.get(name).getAsStringList();
@@ -156,7 +231,9 @@ public class Record {
 
     /**
      * Gets the field value as file list.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
     public List<FileDto> getFiles(String name) {
 
@@ -165,7 +242,9 @@ public class Record {
 
     /**
      * Gets the field value as a user object.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
 
     public UserDto getUser(String name) {
@@ -174,38 +253,46 @@ public class Record {
 
     /**
      * Gets the field value as user list.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
     public List<UserDto> getUsers(String name) {
         return fields.get(name).getAsUserList();
     }
-    
+
     /**
      * Gets the field value as a date object.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
     public Date getDateTime(String name) {
         String strDate = fields.get(name).getAsString();
-        if (strDate == null || strDate.isEmpty()) return null;
+        if (strDate == null || strDate.isEmpty())
+            return null;
         try {
             DateFormat df = new SimpleDateFormat(DATETIME_PATTERN);
-            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            //df.setTimeZone(TimeZone.getTimeZone("UTC"));
             return df.parse(strDate);
         } catch (ParseException e) {
             throw new TypeMismatchException();
         }
     }
-    
+
     /**
      * Gets the field value as a date object.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
     public Date getDate(String name) {
         String strDate = fields.get(name).getAsString();
-        if (strDate == null || strDate.isEmpty()) return null;
+        if (strDate == null || strDate.isEmpty())
+            return null;
         try {
             DateFormat df = new SimpleDateFormat(DATE_PATTERN);
-            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            //df.setTimeZone(TimeZone.getTimeZone("UTC"));
             return df.parse(strDate);
         } catch (ParseException e) {
             throw new TypeMismatchException();
@@ -214,16 +301,21 @@ public class Record {
 
     /**
      * Gets the field value as a sub table.
-     * @param name field name
+     * 
+     * @param name
+     *            field name
      */
     public List<Record> getSubtable(String name) {
         return fields.get(name).getAsSubtable();
     }
-    
+
     /**
      * Adds a new field and sets the string value.
-     * @param name field name
-     * @param value field value
+     * 
+     * @param name
+     *            field name
+     * @param value
+     *            field value
      */
     public void setString(String name, String value) {
         Field field = new Field(name, FieldType.SINGLE_LINE_TEXT, value);
@@ -232,8 +324,11 @@ public class Record {
 
     /**
      * Adds a new field and sets the long value.
-     * @param name field name
-     * @param value field value
+     * 
+     * @param name
+     *            field name
+     * @param value
+     *            field value
      */
     public void setLong(String name, long value) {
         Field field = new Field(name, FieldType.NUMBER, Long.valueOf(value));
@@ -242,8 +337,27 @@ public class Record {
 
     /**
      * Adds a new field and sets the user object.
-     * @param name field name
-     * @param codes field value
+     * 
+     * @param name
+     *            field name
+     * @param codes
+     *            field value
+     */
+    public void setUser(String name, String code) {
+        UserDto user = new UserDto();
+        user.setCode(code);
+        
+        Field field = new Field(name, FieldType.CREATOR, user);
+        addField(name, field);
+    }
+    
+    /**
+     * Adds a new field and sets the user object.
+     * 
+     * @param name
+     *            field name
+     * @param codes
+     *            field value
      */
     public void setUsers(String name, List<String> codes) {
         List<UserDto> list = new ArrayList<UserDto>();
@@ -258,18 +372,24 @@ public class Record {
 
     /**
      * Adds a new field and sets the file object.
+     * 
      * @param name
-     * @param file field value
+     * @param file
+     *            field value
      */
     public void setFile(String name, File file) {
         setFile(name, file, null);
     }
-    
+
     /**
      * Adds a new field and sets the file object.
-     * @param name field name
-     * @param file file object
-     * @param contentType content type
+     * 
+     * @param name
+     *            field name
+     * @param file
+     *            file object
+     * @param contentType
+     *            content type
      */
     public void setFile(String name, File file, String contentType) {
         Field field = new Field(name, FieldType.FILE, null);
@@ -277,35 +397,49 @@ public class Record {
         field.setLazyUploader(uploader);
         addField(name, field);
     }
-    
+
     /**
      * Adds a new field and sets the file stream.
-     * @param name field name
-     * @param file file object
-     * @param fileName file name
+     * 
+     * @param name
+     *            field name
+     * @param file
+     *            file object
+     * @param fileName
+     *            file name
      */
     public void setFile(String name, InputStream file, String fileName) {
         setFile(name, file, fileName, null);
     }
-    
+
     /**
      * Adds a new field and sets the file stream.
-     * @param name field name
-     * @param file file stream
-     * @param fileName file name
-     * @param contentType content type
+     * 
+     * @param name
+     *            field name
+     * @param file
+     *            file stream
+     * @param fileName
+     *            file name
+     * @param contentType
+     *            content type
      */
-    public void setFile(String name, InputStream file, String fileName, String contentType) {
+    public void setFile(String name, InputStream file, String fileName,
+            String contentType) {
         Field field = new Field(name, FieldType.FILE, null);
-        LazyUploader uploader = new InputStreamLazyUploader(file, fileName, contentType);
+        LazyUploader uploader = new InputStreamLazyUploader(file, fileName,
+                contentType);
         field.setLazyUploader(uploader);
         addField(name, field);
     }
-    
+
     /**
      * Adds a new field and sets the file keys.
-     * @param name field name
-     * @param fileKeys list of the file keys
+     * 
+     * @param name
+     *            field name
+     * @param fileKeys
+     *            list of the file keys
      */
     public void setFiles(String name, List<String> fileKeys) {
         List<FileDto> list = new ArrayList<FileDto>();
@@ -320,8 +454,11 @@ public class Record {
 
     /**
      * Adds a new field and sets the string list.
-     * @param name field name
-     * @param values field value
+     * 
+     * @param name
+     *            field name
+     * @param values
+     *            field value
      */
     public void setStrings(String name, List<String> values) {
         List<String> list = new ArrayList<String>();
@@ -334,32 +471,41 @@ public class Record {
 
     /**
      * Adds a new field and sets the date time value.
-     * @param name field name
-     * @param date field value
+     * 
+     * @param name
+     *            field name
+     * @param date
+     *            field value
      */
     public void setDateTime(String name, Date date) {
         DateFormat df = new SimpleDateFormat(DATETIME_PATTERN);
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        //df.setTimeZone(TimeZone.getTimeZone("UTC"));
         String strDate = df.format(date);
         setString(name, strDate);
     }
-    
+
     /**
      * Adds a new field and sets the date value.
-     * @param name field name
-     * @param date field value
+     * 
+     * @param name
+     *            field name
+     * @param date
+     *            field value
      */
     public void setDate(String name, Date date) {
         DateFormat df = new SimpleDateFormat(DATE_PATTERN);
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        //df.setTimeZone(TimeZone.getTimeZone("UTC"));
         String strDate = df.format(date);
         setString(name, strDate);
     }
-    
+
     /**
      * Adds a new field and sets the sub table.
-     * @param name field name
-     * @param value field value
+     * 
+     * @param name
+     *            field name
+     * @param value
+     *            field value
      */
     public void setSubtable(String name, List<Record> value) {
         Field field = new Field(name, FieldType.SUBTABLE, value);

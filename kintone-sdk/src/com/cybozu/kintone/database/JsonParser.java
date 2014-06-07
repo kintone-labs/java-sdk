@@ -163,10 +163,12 @@ public class JsonParser {
             case DROP_DOWN:
             case LINK:
             case STATUS:
+            case RECORD_NUMBER:
                 object = element.getAsString();
                 break;
             case NUMBER:
-            case RECORD_NUMBER:
+            case __ID__:
+            case __REVISION__:
                 strVal = element.getAsString();
                 try {
                     object = Long.valueOf(strVal);
@@ -500,6 +502,9 @@ public class JsonParser {
         for (long id : ids) {
             writer.beginObject();
             writer.name("id").value(id);
+            if (record.hasRevision()) {
+                writer.name("revision").value(record.getRevision());
+            }
             writer.name("record");
             writer.beginObject();
             for (String fieldName : record.getFieldNames()) {
@@ -512,6 +517,91 @@ public class JsonParser {
             }
             writer.endObject();
             writer.endObject();
+        }
+        writer.endArray();
+
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
+     *            the application id
+     * @param records
+     *            an array of the updated records
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdate(long app, List<Record> records)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("records");
+
+        writer.beginArray();
+        for (Record record : records) {
+            writer.beginObject();
+            writer.name("id").value(record.getId());
+            if (record.hasRevision()) {
+                writer.name("revision").value(record.getRevision());
+            }
+            writer.name("record");
+            writer.beginObject();
+            for (String fieldName : record.getFieldNames()) {
+                Field field = record.getField(fieldName);
+                try {
+                    writeField(writer, field);
+                } catch (TypeMismatchException e) {
+                    e.printStackTrace();
+                }
+            }
+            writer.endObject();
+            writer.endObject();
+        }
+        writer.endArray();
+
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for delete method.
+     * @param app
+     *            the application id
+     * @param records
+     *            an array of the records to be deleted
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForDelete(long app, List<Record> records)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        
+        writer.name("ids");
+        writer.beginArray();
+        for (Record record : records) {
+            writer.value(record.getId());
+        }
+        writer.endArray();
+        
+        writer.name("revisions");
+        writer.beginArray();
+        for (Record record : records) {
+            writer.value(record.getRevision());
         }
         writer.endArray();
 

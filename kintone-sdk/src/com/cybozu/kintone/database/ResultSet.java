@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import com.cybozu.kintone.database.exception.DBException;
 
@@ -120,6 +121,15 @@ public class ResultSet {
      */
     public Long getId() {
         return current.getId();
+    }
+    
+    /**
+     * Gets the revision number of the record.
+     * 
+     * @return revision number
+     */
+    public Long getRevision() {
+        return current.getRevision();
     }
 
     /**
@@ -250,6 +260,17 @@ public class ResultSet {
      */
     public List<Record> getSubtable(String name) {
         return current.getSubtable(name);
+    }
+    
+    /**
+     * Gets the set of the field name.
+     * @return set of the field name
+     */
+    public Set<String> getFieldNames() {
+        if (size() == 0)
+            return null;
+        
+        return records.get(0).getFieldNames();
     }
     
     /**

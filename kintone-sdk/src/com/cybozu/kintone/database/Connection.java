@@ -1087,7 +1087,7 @@ public class Connection {
     /**
      * Build update.
      * 
-     * @param build
+     * @param bulk
      *            an instance of bulk request
      * @throws DBException
      */

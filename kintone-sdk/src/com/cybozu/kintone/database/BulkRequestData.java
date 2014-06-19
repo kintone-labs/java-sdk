@@ -41,13 +41,13 @@ public class BulkRequestData {
         return method;
     }
     /**
-     * @return
+     * @return api
      */
     public String getApi() {
         return api;
     }
     /**
-     * @return
+     * @return payload
      */
     public String getPayload() {
         return payload;

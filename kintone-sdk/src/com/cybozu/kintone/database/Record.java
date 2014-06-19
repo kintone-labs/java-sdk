@@ -340,7 +340,7 @@ public class Record implements Cloneable {
      * 
      * @param name
      *            field name
-     * @param codes
+     * @param code
      *            field value
      */
     public void setUser(String name, String code) {

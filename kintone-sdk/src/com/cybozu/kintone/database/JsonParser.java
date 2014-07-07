@@ -164,9 +164,9 @@ public class JsonParser {
             case LINK:
             case STATUS:
             case RECORD_NUMBER:
+            case NUMBER:
                 object = element.getAsString();
                 break;
-            case NUMBER:
             case __ID__:
             case __REVISION__:
                 strVal = element.getAsString();

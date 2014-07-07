@@ -123,6 +123,7 @@ public class ConnectionTest {
             record = new Record();
             record.setString("Single_line_text", "foo");
             record.setLong("Number", 999);
+            record.setString("Number_0", "999.99");
             
             db.insert(app, record);
             
@@ -130,6 +131,10 @@ public class ConnectionTest {
             if (rs.size() != 1) {
                 fail("invalid count");
             }
+            rs.next();
+            assert(rs.getString("Single_line_text") == "foo");
+            assert(rs.getLong("Number") == 999);
+            assert(rs.getString("Number_0") == "999.99");
             
         } catch(Exception e) {
             fail("db exception:" + e.getMessage());

@@ -23,6 +23,9 @@ See developer site for more details.
 
 ## Release Notes
 
+v 0.4
+* Bug fix
+
 v 0.3
 * Support for the new authentication feature using API token
 * $id built-in field is used as record id.

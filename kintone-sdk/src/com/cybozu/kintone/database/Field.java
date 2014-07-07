@@ -106,8 +106,9 @@ public class Field {
         
         if (value instanceof String) {
             return (String) value;
+        } else {
+            return value.toString();
         }
-        throw new TypeMismatchException();
     }
 
     /**
@@ -119,6 +120,14 @@ public class Field {
         
         if (value instanceof Long) {
             return (Long) value;
+        }
+        
+        if (value instanceof String) {
+            String strVal = (String) value;
+            try {
+                return Long.valueOf(strVal);
+            } catch (NumberFormatException e) {
+            }
         }
         throw new TypeMismatchException();
     }

@@ -571,4 +571,31 @@ public class ConnectionTest {
             fail("db exception:" + e.getMessage());
         }
     }
+    
+    @Test
+    public void testGetApp() {
+        Connection db = getConnection();
+        try {
+        	AppDto app = db.getApp(1);
+        	System.out.println(app.getAppId());
+        	System.out.println(app.getCode());
+        	System.out.println(app.getName());
+        	System.out.println(app.getDescription());
+        } catch(Exception e) {
+            fail("db exception:" + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testGetApps() {
+        Connection db = getConnection();
+        try {
+        	List<AppDto> apps = db.getApps("hoge");
+        	for (AppDto app: apps) {
+        		System.out.println(app.getName());
+        	}
+        } catch(Exception e) {
+            fail("db exception:" + e.getMessage());
+        }
+    }
 }

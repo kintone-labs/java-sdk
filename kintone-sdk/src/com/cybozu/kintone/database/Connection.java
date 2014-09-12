@@ -72,6 +72,8 @@ public class Connection {
     private final String API_TOKEN = "X-Cybozu-API-Token";
     private final String JSON_CONTENT = "application/json";
     private final String API_PREFIX = "/k/v1/";
+    private final String GUEST_API_PREFIX = "/k/guest/%d/v1/";
+    
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
     private final String USER_AGENT_KEY = "User-Agent";
     private final String USER_AGENT_VALUE = "kintone-SDK 1.0";
@@ -86,6 +88,7 @@ public class Connection {
     private String userAgent = USER_AGENT_VALUE;
     private boolean trustAllHosts; // for debug
     private boolean useClientCert;
+    private long guestSpaceId = -1;
     private HashMap<String, String> headers = new HashMap<String, String>();
 
     /**
@@ -143,7 +146,11 @@ public class Connection {
             }
             sb.append(".cybozu.com");
         }
-        sb.append(API_PREFIX);
+        if (this.guestSpaceId >= 0) {
+        	sb.append(String.format(GUEST_API_PREFIX, this.guestSpaceId));
+        } else {
+        	sb.append(API_PREFIX);
+        }
         if (api != null) {
             sb.append(api);
         }
@@ -197,7 +204,22 @@ public class Connection {
         });
     }
 
+    
     /**
+	 * @return the guestSpaceId
+	 */
+	public long getGuestSpaceId() {
+		return guestSpaceId;
+	}
+
+	/**
+	 * @param guestSpaceId the guestSpaceId to set
+	 */
+	public void setGuestSpaceId(long guestSpaceId) {
+		this.guestSpaceId = guestSpaceId;
+	}
+
+	/**
      * Adds a user customized header.
      * 
      * @param name

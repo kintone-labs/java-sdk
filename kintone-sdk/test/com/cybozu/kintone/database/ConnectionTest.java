@@ -29,6 +29,14 @@ public class ConnectionTest {
         return Integer.valueOf(System.getenv("APP_ID"));
     }
     
+    private long getGuestSpaceId() {
+        return Integer.valueOf(System.getenv("GUEST_SPACE_ID"));
+    }
+    
+    private long getGuestAppId() {
+        return Integer.valueOf(System.getenv("GUEST_APP_ID"));
+    }
+    
     @Before
     public void initialize() {
 
@@ -132,9 +140,9 @@ public class ConnectionTest {
                 fail("invalid count");
             }
             rs.next();
-            assert(rs.getString("Single_line_text") == "foo");
-            assert(rs.getLong("Number") == 999);
-            assert(rs.getString("Number_0") == "999.99");
+            assertEquals(rs.getString("Single_line_text"), "foo");
+            assertEquals(rs.getLong("Number"), new Long(999));
+            assertEquals(rs.getString("Number_0"), "999.99");
             
         } catch(Exception e) {
             fail("db exception:" + e.getMessage());
@@ -594,6 +602,25 @@ public class ConnectionTest {
         	for (AppDto app: apps) {
         		System.out.println(app.getName());
         	}
+        } catch(Exception e) {
+            fail("db exception:" + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testGuestSpace() {
+        Connection db = getConnection();
+        db.setGuestSpaceId(getGuestSpaceId());
+        long app = getGuestAppId();
+        try {
+            ResultSet rs = db.select(app, "");
+            if (rs.size() != 1) {
+                fail("invalid count");
+            }
+            rs.next();
+            assertEquals(rs.getString("Single_line_text"), "test");
+            assertEquals(rs.getLong("Number"), new Long(3));
+            
         } catch(Exception e) {
             fail("db exception:" + e.getMessage());
         }

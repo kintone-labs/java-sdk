@@ -629,4 +629,47 @@ public class JsonParser {
         
         return fileKey;
     }
-}
+    
+    /**
+     * Convert json string to AppDto.
+     * @param json
+     *            a json string
+     * @return app object
+     * @throws IOException
+     */
+    public AppDto jsonToApp(String json) throws IOException {
+    	com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement element = parser.parse(json);
+        Type elementType = new TypeToken<AppDto>() {
+        }.getType();
+        Gson gson = new Gson();
+
+        return gson.fromJson(element, elementType);
+    }
+    
+    /**
+     * Convert json string to AppDto array.
+     * @param json
+     *            a json string
+     * @return the list of app object
+     * @throws IOException
+     */
+    public List<AppDto> jsonToApps(String json) throws IOException {
+    	com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        if (!root.isJsonObject()) 
+        	return null;
+        
+        JsonArray apps = root.getAsJsonObject().get("apps").getAsJsonArray();
+            
+        if (!apps.isJsonArray())
+            return null;
+        
+        Type collectionType = new TypeToken<Collection<AppDto>>() {
+        }.getType();
+        Gson gson = new Gson();
+
+        return gson.fromJson(apps, collectionType);
+    }
+} 

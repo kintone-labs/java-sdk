@@ -72,6 +72,8 @@ public class Connection {
     private final String API_TOKEN = "X-Cybozu-API-Token";
     private final String JSON_CONTENT = "application/json";
     private final String API_PREFIX = "/k/v1/";
+    private final String GUEST_API_PREFIX = "/k/guest/%d/v1/";
+    
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
     private final String USER_AGENT_KEY = "User-Agent";
     private final String USER_AGENT_VALUE = "kintone-SDK 1.0";
@@ -86,6 +88,7 @@ public class Connection {
     private String userAgent = USER_AGENT_VALUE;
     private boolean trustAllHosts; // for debug
     private boolean useClientCert;
+    private long guestSpaceId = -1;
     private HashMap<String, String> headers = new HashMap<String, String>();
 
     /**
@@ -143,7 +146,11 @@ public class Connection {
             }
             sb.append(".cybozu.com");
         }
-        sb.append(API_PREFIX);
+        if (this.guestSpaceId >= 0) {
+        	sb.append(String.format(GUEST_API_PREFIX, this.guestSpaceId));
+        } else {
+        	sb.append(API_PREFIX);
+        }
         if (api != null) {
             sb.append(api);
         }
@@ -197,7 +204,22 @@ public class Connection {
         });
     }
 
+    
     /**
+	 * @return the guestSpaceId
+	 */
+	public long getGuestSpaceId() {
+		return guestSpaceId;
+	}
+
+	/**
+	 * @param guestSpaceId the guestSpaceId to set
+	 */
+	public void setGuestSpaceId(long guestSpaceId) {
+		this.guestSpaceId = guestSpaceId;
+	}
+
+	/**
      * Adds a user customized header.
      * 
      * @param name
@@ -1096,5 +1118,129 @@ public class Connection {
         String json = bulk.getJson();
         
         request("POST", "bulkRequest.json", json);
+    }
+    
+    /**
+     * Return the app information object
+     * 
+     * @param id 
+     * 	            app id
+     * @return app object
+     */
+    public AppDto getApp(long id) throws DBException
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("id=");
+        sb.append(id);
+        
+        String query = new String(sb);
+        String response = request("GET", "app.json?" + query, null);
+        JsonParser parser = new JsonParser();
+        AppDto app = null;
+        
+        try {
+            app = parser.jsonToApp(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to app");
+        }
+
+        return app;
+    }
+    
+    /**
+     * Search apps with name
+     * 
+     * @param name
+     * @return the list of apps
+     */
+    public List<AppDto> getApps(String name) throws DBException {
+    	return getApps(null, null, name, null, 100, 0);
+    }
+    
+    /**
+     * Search apps with id, code or name
+     * 
+     * @param ids
+     * @param codes
+     * @param name
+     * @param spaceIds
+     * @param limit
+     * @param offset
+     * @return the list of apps
+     */
+    public List<AppDto> getApps(List<Long> ids, List<String> codes, 
+    		String name, List<Long> spaceIds, long limit, long offset) throws DBException {
+    	
+    	StringBuilder sb = new StringBuilder();
+        
+        if (ids != null) {
+        	for (int i = 0; i < ids.size(); i++) {
+        		long id = ids.get(i);
+            	if (sb.length() > 0) {
+            		sb.append("&");
+            	}
+            	sb.append("ids[" + i + "]=");
+            	sb.append(id);
+        	}
+        }
+        
+        if (codes != null) {
+	        for (int i = 0; i < codes.size(); i++) {
+	        	String code = codes.get(i);
+	        	if (sb.length() > 0) {
+	        		sb.append("&");
+	        	}
+	        	try {
+	        		sb.append("codes[" + i + "]=");
+	        		sb.append(URLEncoder.encode(code, "UTF-8"));
+	        	} catch (UnsupportedEncodingException e) {
+	        		throw new DBException("Malformed code");
+	        	}
+	        }
+        }
+        
+        if (name != null) {
+        	if (sb.length() > 0) {
+        		sb.append("&");
+        	}
+        	try {
+        		sb.append("name=");
+        		sb.append(URLEncoder.encode(name, "UTF-8"));
+        	} catch (UnsupportedEncodingException e) {
+        		throw new DBException("Malformed name");
+        	}
+        }
+        
+        if (spaceIds != null) {
+	        for (int i = 0; i < spaceIds.size(); i++) {
+	        	long id = spaceIds.get(i);
+	        	if (sb.length() > 0) {
+	        		sb.append("&");
+	        	}
+	        	sb.append("spaceIds[" + i + "]=");
+	        	sb.append(id);
+	        }
+        }
+        
+        if (sb.length() > 0) {
+    		sb.append("&");
+    	}
+    	sb.append("limit=");
+    	sb.append(limit);
+    	sb.append("&offset=");
+    	sb.append(offset);
+        
+        String query = new String(sb);
+        String response = request("GET", "apps.json?" + query, null);
+        JsonParser parser = new JsonParser();
+        List<AppDto> apps = null;
+        
+        try {
+            apps = parser.jsonToApps(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to apps");
+        }
+        
+    	return apps;
     }
 }

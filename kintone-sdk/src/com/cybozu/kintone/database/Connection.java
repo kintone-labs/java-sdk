@@ -635,12 +635,15 @@ public class Connection {
                 writer.write("Content-Disposition: form-data; name=\"file\"; filename=\""
                         + fileName + "\"\r\n");
                 writer.write("Content-Type: " + contentType + "\r\n\r\n");
+                writer.flush();
                 byte[] buffer = new byte[8192];
                 int n = 0;
                 while (-1 != (n = input.read(buffer))) {
                     os.write(buffer, 0, n);
                 }
+                os.flush();
                 writer.write("\r\n--" + BOUNDARY + "--\r\n");
+                os.flush();
                 writer.close();
         } catch (IOException e) {
             throw new DBException("an error occurred while sending data");

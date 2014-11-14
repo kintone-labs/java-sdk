@@ -2,6 +2,7 @@ package com.cybozu.kintone.database;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -184,6 +185,34 @@ public class ConnectionTest {
             assertEquals(rs.getLong("Number"), new Long(999));
             assertEquals(rs.getString("Number_0"), "999.99");
             assertEquals(rs.getString("ï∂éöóÒ__1çs_"), "ÇŸÇ∞");
+            
+        } catch(Exception e) {
+            fail("db exception:" + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testUpload() {
+        Connection db = getConnection();
+
+        long app = getAppId();
+        try {
+            Record record;
+            record = new Record();
+            File file = new File("c:\\tmp\\ÇŸÇ∞.jpg");
+            record.setFile("Attachment", file);
+            
+            db.insert(app, record);
+            
+            ResultSet rs = db.select(app, "");
+            if (rs.size() != 1) {
+                fail("invalid count");
+            }
+            rs.next();
+            List<FileDto> fileNames = rs.getFiles("Attachment");
+            assertEquals(fileNames.size(), 1);
+            assertEquals(fileNames.get(0).getName(), "ÇŸÇ∞.jpg");
+            assertTrue(fileNames.get(0).getSize() > 0);
             
         } catch(Exception e) {
             fail("db exception:" + e.getMessage());

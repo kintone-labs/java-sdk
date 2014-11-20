@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.cybozu.kintone.database.exception.DBException;
@@ -263,6 +264,18 @@ public class ResultSet {
     }
     
     /**
+     * Gets the field type of the specified field.
+     * 
+     * @param name
+     *            field name
+     * @return 
+     * 			  field type
+     */
+    public FieldType getFieldType(String name) {
+    	return current.getFieldType(name);
+    }
+    
+    /**
      * Gets the set of the field name.
      * @return set of the field name
      */
@@ -273,6 +286,15 @@ public class ResultSet {
         return records.get(0).getFieldNames();
     }
     
+    /**
+     * Gets the entry set of the record.
+     * 
+     * @return the entry set of the record
+     */
+    public Set<Map.Entry<String, Field>> getEntrySet() {
+        return current.getEntrySet();
+    }
+
     /**
      * Downloads the file body.
      * 

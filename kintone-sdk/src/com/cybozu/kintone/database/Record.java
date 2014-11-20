@@ -511,4 +511,16 @@ public class Record implements Cloneable {
         Field field = new Field(name, FieldType.SUBTABLE, value);
         addField(name, field);
     }
+    
+    /**
+     * Gets the field type of the specified field.
+     * 
+     * @param name
+     *            field name
+     * @return 
+     * 			  field type
+     */
+    public FieldType getFieldType(String name) {
+    	return fields.get(name).getFieldType();
+    }
 }

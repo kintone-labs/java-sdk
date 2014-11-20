@@ -2,6 +2,7 @@ package com.cybozu.kintone.database;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class ConnectionTest {
         record = new Record();
         record.setString("Single_line_text", "baz");
         records.add(record);
+        
         List<Long> ids = db.insert(app, records);
         if (ids.size() != 3) {
             fail("invalid count");
@@ -123,6 +125,44 @@ public class ConnectionTest {
     }
 
     @Test
+    public void testSelect2() {
+        Connection db = getConnection();
+        long app = getAppId();
+        try {
+            ArrayList<Record> records = new ArrayList<Record>();
+            
+            Record record;
+            record = new Record();
+            record.setString("文字列__1行_", "ほげ");
+            records.add(record);
+            record = new Record();
+            record.setString("文字列__1行_", "ふが");
+            records.add(record);
+            record = new Record();
+            record.setString("文字列__1行_", "ほげ");
+            records.add(record);
+            record = new Record();
+            record.setString("文字列__1行_", "ふが");
+            records.add(record);
+            record = new Record();
+            record.setString("文字列__1行_", "ほげ");
+            records.add(record);
+            db.insert(app, records);
+            
+            String[] columns = {"文字列__1行_"};
+            ResultSet rs = db.select(app, "文字列__1行_ = \"ほげ\"", columns);
+            if (rs.size() != 3) {
+                fail("invalid count " + rs.size());
+            }
+            while (rs.next()) {
+                assertEquals(rs.getString("文字列__1行_"), "ほげ");
+            }
+        } catch(DBException e) {
+            fail("failed to select");
+        }
+    }
+    
+    @Test
     public void testInsertLongRecord() {
         Connection db = getConnection();
         long app = getAppId();
@@ -132,6 +172,7 @@ public class ConnectionTest {
             record.setString("Single_line_text", "foo");
             record.setLong("Number", 999);
             record.setString("Number_0", "999.99");
+            record.setString("文字列__1行_", "ほげ");
             
             db.insert(app, record);
             
@@ -143,6 +184,35 @@ public class ConnectionTest {
             assertEquals(rs.getString("Single_line_text"), "foo");
             assertEquals(rs.getLong("Number"), new Long(999));
             assertEquals(rs.getString("Number_0"), "999.99");
+            assertEquals(rs.getString("文字列__1行_"), "ほげ");
+            
+        } catch(Exception e) {
+            fail("db exception:" + e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testUpload() {
+        Connection db = getConnection();
+
+        long app = getAppId();
+        try {
+            Record record;
+            record = new Record();
+            File file = new File("c:\\tmp\\ほげ.jpg");
+            record.setFile("Attachment", file);
+            
+            db.insert(app, record);
+            
+            ResultSet rs = db.select(app, "");
+            if (rs.size() != 1) {
+                fail("invalid count");
+            }
+            rs.next();
+            List<FileDto> fileNames = rs.getFiles("Attachment");
+            assertEquals(fileNames.size(), 1);
+            assertEquals(fileNames.get(0).getName(), "ほげ.jpg");
+            assertTrue(fileNames.get(0).getSize() > 0);
             
         } catch(Exception e) {
             fail("db exception:" + e.getMessage());

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
@@ -460,11 +460,12 @@ public class Connection {
             } catch (IOException e) {
                 throw new DBException("an error occurred while sending data");
             }
-            PrintStream ps = new PrintStream(os);
             try {
-                ps.print(body);                
-            } finally {
-                ps.close();
+	            OutputStreamWriter writer = new OutputStreamWriter(os, "UTF-8");
+	            writer.write(body);
+	            writer.close();
+            } catch(IOException e) {
+            	throw new DBException("socket error");
             }
             
         }
@@ -629,18 +630,21 @@ public class Connection {
 
         try {
                 os = conn.getOutputStream();
-                PrintStream ps = new PrintStream(os);
-                ps.print("--" + BOUNDARY + "\r\n");
-                ps.print("Content-Disposition: form-data; name=\"file\"; filename=\""
+                OutputStreamWriter writer = new OutputStreamWriter(os, "UTF-8");
+                writer.write("--" + BOUNDARY + "\r\n");
+                writer.write("Content-Disposition: form-data; name=\"file\"; filename=\""
                         + fileName + "\"\r\n");
-                ps.print("Content-Type: " + contentType + "\r\n\r\n");
+                writer.write("Content-Type: " + contentType + "\r\n\r\n");
+                writer.flush();
                 byte[] buffer = new byte[8192];
                 int n = 0;
                 while (-1 != (n = input.read(buffer))) {
                     os.write(buffer, 0, n);
                 }
-                ps.print("\r\n--" + BOUNDARY + "--\r\n");
-                ps.close();
+                os.flush();
+                writer.write("\r\n--" + BOUNDARY + "--\r\n");
+                os.flush();
+                writer.close();
         } catch (IOException e) {
             throw new DBException("an error occurred while sending data");
         }
@@ -733,7 +737,10 @@ public class Connection {
             int i = 0;
             for (String column : columns) {
                 sb.append("&fields[" + i + "]=");
-                sb.append(column);
+                try {
+                	sb.append(URLEncoder.encode(column, "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                }
                 i++;
             }
         }

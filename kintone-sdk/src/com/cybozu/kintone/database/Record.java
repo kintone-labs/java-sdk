@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import com.cybozu.kintone.database.exception.TypeMismatchException;
 
@@ -273,7 +274,7 @@ public class Record implements Cloneable {
             return null;
         try {
             DateFormat df = new SimpleDateFormat(DATETIME_PATTERN);
-            //df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
             return df.parse(strDate);
         } catch (ParseException e) {
             throw new TypeMismatchException();
@@ -479,7 +480,7 @@ public class Record implements Cloneable {
      */
     public void setDateTime(String name, Date date) {
         DateFormat df = new SimpleDateFormat(DATETIME_PATTERN);
-        //df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
         String strDate = df.format(date);
         setString(name, strDate);
     }

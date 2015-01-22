@@ -227,6 +227,7 @@ public class ConnectionTest {
             Record record;
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm");
             Date date = df.parse("2000-01-01 01:34");
+
             record = new Record();
             record.setUser("Created_by", "aono");
             record.setUser("Updated_by", "aono");

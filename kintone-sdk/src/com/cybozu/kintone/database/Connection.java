@@ -95,8 +95,8 @@ public class Connection {
      * Constructor
      * 
      * @param domain
-     *            domain name. if your FQDN is "example.cybozu.com", domain name
-     *            is "example".
+     *            FQDN.
+     *            for example "example1.cybozu.com" or "example2.cybozu.cn" or "example3.kintone.com" .
      * @param login
      *            login name
      * @param password
@@ -115,8 +115,8 @@ public class Connection {
      * Constructor
      * 
      * @param domain
-     *            domain name. if your FQDN is "example.cybozu.com", domain name
-     *            is "example".
+     *            FQDN.
+     *            for example "example1.cybozu.com" or "example2.cybozu.cn" or "example3.kintone.com" .
      * @param apiToken
      *            api Token
      */

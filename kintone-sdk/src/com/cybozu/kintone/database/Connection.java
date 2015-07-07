@@ -513,7 +513,7 @@ public class Connection {
             if (response == null) {
                 throw new DBNotFoundException("not found");
             } else {
-                throw new DBNotFoundException(response);
+                throw new DBNotFoundException(statusCode, response);
             }
         }
         if (statusCode != 200) {
@@ -521,7 +521,7 @@ public class Connection {
             if (response == null) {
                 throw new DBException("http status error(" + statusCode + ")");
             } else {
-                throw new DBException(response);
+                throw new DBException(statusCode, response);
             }
         }
     }

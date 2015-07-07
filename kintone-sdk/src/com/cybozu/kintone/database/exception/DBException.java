@@ -22,6 +22,7 @@ public class DBException extends Exception {
      */
     private static final long serialVersionUID = 8036246942261521021L;
     private ErrorResponse error;
+    private int httpStatus;
     
     public DBException() {
         super();
@@ -39,13 +40,18 @@ public class DBException extends Exception {
         super(message);
     }
     
-    public DBException(ErrorResponse error) {
+    public DBException(int httpStatus, ErrorResponse error) {
         super(error.getMessage());
         this.error = error;
+        this.httpStatus = httpStatus;
     }
     
     public ErrorResponse getErrorResponse() {
         return error;
+    }
+    
+    public int getHttpStatus() {
+    	return httpStatus;
     }
     
     @Override
@@ -55,6 +61,7 @@ public class DBException extends Exception {
         sb.append("id: " + error.getId());
         sb.append(", code: " + error.getCode());
         sb.append(", message: " + error.getMessage());
+        sb.append(", status: " + this.getHttpStatus());
         
         return sb.toString();
     }

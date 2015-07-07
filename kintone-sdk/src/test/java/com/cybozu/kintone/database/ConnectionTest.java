@@ -133,29 +133,29 @@ public class ConnectionTest {
 
 			Record record;
 			record = new Record();
-			record.setString("•¶š—ñ__1s_", "‚Ù‚°");
+			record.setString("æ–‡å­—åˆ—__1è¡Œ_", "ã»ã’");
 			records.add(record);
 			record = new Record();
-			record.setString("•¶š—ñ__1s_", "‚Ó‚ª");
+			record.setString("æ–‡å­—åˆ—__1è¡Œ_", "ãµãŒ");
 			records.add(record);
 			record = new Record();
-			record.setString("•¶š—ñ__1s_", "‚Ù‚°");
+			record.setString("æ–‡å­—åˆ—__1è¡Œ_", "ã»ã’");
 			records.add(record);
 			record = new Record();
-			record.setString("•¶š—ñ__1s_", "‚Ó‚ª");
+			record.setString("æ–‡å­—åˆ—__1è¡Œ_", "ãµãŒ");
 			records.add(record);
 			record = new Record();
-			record.setString("•¶š—ñ__1s_", "‚Ù‚°");
+			record.setString("æ–‡å­—åˆ—__1è¡Œ_", "ã»ã’");
 			records.add(record);
 			db.insert(app, records);
 
-			String[] columns = { "•¶š—ñ__1s_" };
-			ResultSet rs = db.select(app, "•¶š—ñ__1s_ = \"‚Ù‚°\"", columns);
+			String[] columns = { "æ–‡å­—åˆ—__1è¡Œ_" };
+			ResultSet rs = db.select(app, "æ–‡å­—åˆ—__1è¡Œ_ = \"ã»ã’\"", columns);
 			if (rs.size() != 3) {
 				fail("invalid count " + rs.size());
 			}
 			while (rs.next()) {
-				assertEquals(rs.getString("•¶š—ñ__1s_"), "‚Ù‚°");
+				assertEquals(rs.getString("æ–‡å­—åˆ—__1è¡Œ_"), "ã»ã’");
 			}
 		} catch (DBException e) {
 			fail("failed to select");
@@ -172,7 +172,7 @@ public class ConnectionTest {
 			record.setString("Single_line_text", "foo");
 			record.setLong("Number", 999);
 			record.setString("Number_0", "999.99");
-			record.setString("•¶š—ñ__1s_", "‚Ù‚°");
+			record.setString("æ–‡å­—åˆ—__1è¡Œ_", "ã»ã’");
 
 			db.insert(app, record);
 
@@ -184,7 +184,7 @@ public class ConnectionTest {
 			assertEquals(rs.getString("Single_line_text"), "foo");
 			assertEquals(rs.getLong("Number"), new Long(999));
 			assertEquals(rs.getString("Number_0"), "999.99");
-			assertEquals(rs.getString("•¶š—ñ__1s_"), "‚Ù‚°");
+			assertEquals(rs.getString("æ–‡å­—åˆ—__1è¡Œ_"), "ã»ã’");
 
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
@@ -199,7 +199,7 @@ public class ConnectionTest {
 		try {
 			Record record;
 			record = new Record();
-			File file = new File("c:\\tmp\\‚Ù‚°.jpg");
+			File file = new File("c:\\tmp\\ã»ã’.jpg");
 			record.setFile("Attachment", file);
 
 			db.insert(app, record);
@@ -211,7 +211,7 @@ public class ConnectionTest {
 			rs.next();
 			List<FileDto> fileNames = rs.getFiles("Attachment");
 			assertEquals(fileNames.size(), 1);
-			assertEquals(fileNames.get(0).getName(), "‚Ù‚°.jpg");
+			assertEquals(fileNames.get(0).getName(), "ã»ã’.jpg");
 			assertTrue(fileNames.get(0).getSize() > 0);
 
 		} catch (Exception e) {

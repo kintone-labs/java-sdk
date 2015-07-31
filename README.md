@@ -1,6 +1,6 @@
 # kintone SDK for Java
 
-version 0.6
+version 0.7
 
 ## Requirements
 
@@ -20,6 +20,10 @@ Run [samples] application.
 See developer site for more details.
 * English: http://developers.kintone.com/
 * Japanese: https://cybozudev.zendesk.com/
+
+## Build .jar file
+cd kintone-sdk
+mvn clean compile jar:jar
 
 ## Release Notes
 

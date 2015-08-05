@@ -26,7 +26,7 @@ public class DBNotFoundException extends DBException {
         super(message);
     }
     
-    public DBNotFoundException(ErrorResponse error) {
-        super(error);
+    public DBNotFoundException(int httpStatus, ErrorResponse error) {
+        super(httpStatus, error);
     }
 }

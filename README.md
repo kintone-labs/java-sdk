@@ -18,12 +18,12 @@ You can install kintone SDK for Java on a computer. Perform the following steps 
 ## How to Use
 Run [samples] application.
 See developer site for more details.
-* English: http://developers.kintone.com/
+* English: https://developer.kintone.io
 * Japanese: https://cybozudev.zendesk.com/
 
 ## Build .jar file
-cd kintone-sdk
-mvn clean compile jar:jar
+$ cd kintone-sdk
+$ mvn clean compile jar:jar
 
 ## Release Notes
 

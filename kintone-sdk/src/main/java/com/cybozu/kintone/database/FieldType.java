@@ -44,6 +44,8 @@ public enum FieldType {
     UPDATED_TIME, 
     STATUS_ASSIGNEE, 
     SUBTABLE,
+    ORGANIZATION_SELECT,
+    GROUP_SELECT,
     __REVISION__,
     __ID__;
 

@@ -198,6 +198,8 @@ public class JsonParser {
                 }
                 break;
             case USER_SELECT:
+            case ORGANIZATION_SELECT:
+            case GROUP_SELECT:
             case STATUS_ASSIGNEE:
                 object = jsonToUserArray(element);
                 break;
@@ -349,6 +351,8 @@ public class JsonParser {
                 writer.endArray();
                 break;
             case USER_SELECT:
+            case ORGANIZATION_SELECT:
+            case GROUP_SELECT:
                 writer.beginArray();
                 Iterable<UserDto> userList = field.getAsUserList();
                 for (UserDto user : userList) {

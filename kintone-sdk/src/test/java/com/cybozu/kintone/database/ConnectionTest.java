@@ -334,7 +334,7 @@ public class ConnectionTest {
 			record.setId(rs.getId());
 			record.setRevision(rs.getRevision());
 			record.setString("Single_line_text", "hoge");
-			db.updateByRecord(app, record);
+			db.updateRecord(app, record);
 
 			rs = db.select(app, "Single_line_text = \"hoge\"");
 			if (rs.size() != 1) {
@@ -369,7 +369,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.updateByRecords(app, records);
+			db.updateRecords(app, records);
 
 			rs = db.select(app, "Single_line_text = \"hoge\"");
 			if (rs.size() != 3) {
@@ -400,7 +400,7 @@ public class ConnectionTest {
 			rs.next();
 			record.setId(rs.getId());
 			record.setString("Single_line_text", "hoge");
-			db.updateByRecord(app, record);
+			db.updateRecord(app, record);
 
 		} catch (Exception e) {
 			fail("db exception");
@@ -416,7 +416,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.updateByRecords(app, records);
+			db.updateRecords(app, records);
 			fail("no conflict");
 		} catch (Exception e) {
 		}
@@ -492,7 +492,7 @@ public class ConnectionTest {
 			rs.next();
 			record.setId(rs.getId());
 			record.setRevision(rs.getRevision());
-			db.deleteByRecord(app, record);
+			db.deleteRecord(app, record);
 
 			rs = db.select(app, "");
 			if (rs.size() != 2) {
@@ -522,7 +522,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.deleteByRecords(app, records);
+			db.deleteRecords(app, records);
 
 			rs = db.select(app, "");
 			if (rs.size() != 0) {
@@ -553,7 +553,7 @@ public class ConnectionTest {
 			rs.next();
 			record.setId(rs.getId());
 			record.setString("Single_line_text", "hoge");
-			db.updateByRecord(app, record);
+			db.updateRecord(app, record);
 
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
@@ -569,7 +569,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.deleteByRecords(app, records);
+			db.deleteRecords(app, records);
 			fail("no conflict");
 		} catch (Exception e) {
 		}

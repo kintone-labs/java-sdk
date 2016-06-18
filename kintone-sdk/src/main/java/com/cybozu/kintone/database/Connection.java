@@ -859,12 +859,12 @@ public class Connection {
      *            updated record object
      * @throws DBException
      */
-    public void updateByRecord(long app, Record record) throws DBException {
+    public void updateRecord(long app, Record record) throws DBException {
         List<Record> list = new ArrayList<Record>();
         list.add(record);
-        updateByRecords(app, list);
+        updateRecords(app, list);
     }
-
+    
     /**
      * Updates records.
      * 
@@ -905,7 +905,7 @@ public class Connection {
      *            an array of the updated record object
      * @throws DBException
      */
-    public void updateByRecords(long app, List<Record> records) throws DBException {
+    public void updateRecords(long app, List<Record> records) throws DBException {
         // upload files
         for (Record record: records) {
             Set<Map.Entry<String,Field>> set = record.getEntrySet();
@@ -955,6 +955,71 @@ public class Connection {
     }
 
     /**
+     * Updates a record by specified key.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            updated record object
+     * @param key
+     *            the key field
+     * @throws DBException
+     */
+    public void updateRecordByKey(long app, String key, Record record) throws DBException {
+    }
+
+    /**
+     * Updates records by specified key.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            updated record object
+     * @param key
+     *            the key field
+     * @throws DBException
+     */
+    public void updateRecordsByKey(long app, String key, Record record) throws DBException {
+    }
+    
+
+    /**
+     * Updates assignees.
+     * 
+     * @param app
+     *            application id
+     * @param id
+     *            record id
+     * @param code
+     *            array of the code of the assigned users
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return the new revision number
+     * @throws DBException
+     */
+    public long updateAssignees(long app, long id, List<String> codes, long revision) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForUpdateAssignees(app, id, codes, revision);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record/assigneess.json", json);
+
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
+    }
+    
+    public long updateAssignees(long app, long id, List<String> codes) throws DBException {
+    	return updateAssignees(app, id, codes, -1);
+    }
+    
+    /**
      * Deletes a record.
      * 
      * @param app
@@ -978,10 +1043,10 @@ public class Connection {
      *            a record object to be deleted
      * @throws DBException
      */
-    public void deleteByRecord(long app, Record record) throws DBException {
+    public void deleteRecord(long app, Record record) throws DBException {
         List<Record> list = new ArrayList<Record>();
         list.add(record);
-        deleteByRecords(app, list);
+        deleteRecords(app, list);
     }
     
     /**
@@ -993,7 +1058,7 @@ public class Connection {
      *            a list of the record object to be deleted
      * @throws DBException
      */
-    public void deleteByRecords(long app, List<Record> records) throws DBException {
+    public void deleteRecords(long app, List<Record> records) throws DBException {
         
         JsonParser parser = new JsonParser();
         String json;
@@ -1021,7 +1086,7 @@ public class Connection {
             record.setId(id);
             records.add(record);
         }
-        deleteByRecords(app, records);
+        deleteRecords(app, records);
     }
 
     /**
@@ -1045,7 +1110,7 @@ public class Connection {
             record.setId(rs.getId());
             records.add(record);
         }
-        deleteByRecords(app, records);
+        deleteRecords(app, records);
     }
 
     /**

@@ -631,6 +631,25 @@ public class JsonParser {
     }
     
     /**
+     * Retrieves the revision string from json string.
+     * @param json
+     *            a json string
+     * @return the revision number
+     * @throws IOException
+     */
+    public long jsonToRevision(String json) throws IOException {
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        String revision = null;
+        if (root.isJsonObject()) {
+        	revision = root.getAsJsonObject().get("revision").getAsString();
+        }
+        
+        return Long.valueOf(revision);
+    }
+    
+    /**
      * Convert json string to AppDto.
      * @param json
      *            a json string
@@ -671,5 +690,43 @@ public class JsonParser {
         Gson gson = new Gson();
 
         return gson.fromJson(apps, collectionType);
+    }
+    
+    /**
+     * Generates the json string for update assignees.
+     * @param id
+     *            record id
+     * @param code
+     *            array of the code of the assigned users
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForUpdateAssignees(long app, long id, List<String> codes, long revision) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("id").value(id);
+        
+        
+        writer.name("assignees");
+        writer.beginArray();
+        for (String code : codes) {
+            writer.value(code);
+        }
+        writer.endArray();
+        
+        if (revision >= 0) {
+        	writer.name("revision").value(revision);
+        }
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
     }
 } 

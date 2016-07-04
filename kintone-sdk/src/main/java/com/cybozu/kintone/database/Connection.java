@@ -537,6 +537,9 @@ public class Connection {
         
         String response;
         try {
+        	if (err == null) {
+        		err = conn.getInputStream();
+        	}
             response = streamToString(err);
         } catch (IOException e) {
             return null;
@@ -857,12 +860,31 @@ public class Connection {
      *            application id
      * @param record
      *            updated record object
+     * @return new revision number
      * @throws DBException
      */
-    public void updateRecord(long app, Record record) throws DBException {
-        List<Record> list = new ArrayList<Record>();
-        list.add(record);
-        updateRecords(app, list);
+    public long updateRecord(long app, Record record) throws DBException {
+    	
+    	Set<Map.Entry<String,Field>> set = record.getEntrySet();
+        for (Map.Entry<String,Field> entry: set) {
+            Field field = entry.getValue();
+            lazyUpload(field); // force lazy upload
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdate(app, record);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record.json", json);
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
     }
     
     /**
@@ -963,9 +985,12 @@ public class Connection {
      *            updated record object
      * @param key
      *            the key field
+     * @return new revision number
      * @throws DBException
      */
-    public void updateRecordByKey(long app, String key, Record record) throws DBException {
+    public long updateRecordByKey(long app, String key, Record record) throws DBException {
+    	
+    	return 0;
     }
 
     /**
@@ -1006,7 +1031,7 @@ public class Connection {
             throw new ParseException("failed to encode to json");
         }
 
-        String response = request("PUT", "record/assigneess.json", json);
+        String response = request("PUT", "record/assignees.json", json);
 
         try {
             return parser.jsonToRevision(response);
@@ -1017,6 +1042,71 @@ public class Connection {
     
     public long updateAssignees(long app, long id, List<String> codes) throws DBException {
     	return updateAssignees(app, id, codes, -1);
+    }
+    
+    /**
+     * Updates status.
+     * 
+     * @param app
+     *            application id
+     * @param id
+     *            record id
+     * @param action
+     *            action name
+     * @param assignee
+     *            login name of the assignee
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return the new revision number
+     * @throws DBException
+     */
+    public long updateStatus(long app, long id, String action, String assignee, long revision) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForUpdateStatus(app, id, action, assignee, revision);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record/status.json", json);
+
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
+    }
+    
+    public long updateStatus(long app, long id, String action, String assignee) throws DBException {
+    	return updateStatus(app, id, action, assignee, -1);
+    }
+    
+    /**
+     * Updates status.
+     * 
+     * @param app
+     *            application id
+     * @param ids
+     *            an array of the record id
+     * @param actions
+     *            an array of the action name
+     * @param assignees
+     *            an array of the login name of the assignee
+     * @param revisions
+     *            an array of the revision number (-1 means "not set")
+     * @throws DBException
+     */
+    public void updateStatus(long app, List<Long> ids, List<String> actions, List<String> assignees, List<Long> revisions) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForUpdateStatus(app, ids, actions, assignees, revisions);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("PUT", "records/status.json", json);
     }
     
     /**

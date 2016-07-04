@@ -529,6 +529,45 @@ public class JsonParser {
     /**
      * Generates the json string for update method.
      * @param app
+     *            application id
+     * @param record
+     *            updated record
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdate(long app, Record record)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("id").value(record.getId());
+        if (record.hasRevision()) {
+            writer.name("revision").value(record.getRevision());
+        }
+        writer.name("record");
+        writer.beginObject();
+        for (String fieldName : record.getFieldNames()) {
+            Field field = record.getField(fieldName);
+            try {
+                writeField(writer, field);
+            } catch (TypeMismatchException e) {
+                e.printStackTrace();
+            }
+        }
+        writer.endObject();
+        
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
      *            the application id
      * @param records
      *            an array of the updated records
@@ -693,7 +732,7 @@ public class JsonParser {
     }
     
     /**
-     * Generates the json string for update assignees.
+     * Generates the json string to update assignees.
      * @param id
      *            record id
      * @param code
@@ -724,6 +763,92 @@ public class JsonParser {
         if (revision >= 0) {
         	writer.name("revision").value(revision);
         }
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to update status.
+     * @param app
+     *            application id
+     * @param id
+     *            record id
+     * @param action
+     *            action name
+     * @param assignee
+     *            login name of the assignee
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForUpdateStatus(long app, long id, String action, String assignee, long revision) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("id").value(id);
+        writer.name("action").value(action);
+        if (assignee != null) {
+        	writer.name("assignee").value(assignee);
+        }
+        
+        if (revision >= 0) {
+        	writer.name("revision").value(revision);
+        }
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to update status(for bulk updating).
+     * @param app
+     *            application id
+     * @param ids
+     *            an array of the record id
+     * @param actions
+     *            an array of the action name
+     * @param assignees
+     *            an array of the login name of the assignee
+     * @param revision
+     *            an array of the revision number (-1 means "not set")
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForUpdateStatus(long app,  List<Long> ids, List<String> actions, List<String> assignees, List<Long> revisions) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        
+        int size = ids.size();
+        writer.name("records");
+        writer.beginArray();
+        for (int i = 0; i < size; i++) {
+        	writer.beginObject();
+        	writer.name("id").value(ids.get(i));
+            writer.name("action").value(actions.get(i));
+            if (assignees.get(i) != null) {
+            	writer.name("assignee").value(assignees.get(i));
+            }
+            
+            if (revisions.get(i) >= 0) {
+            	writer.name("revision").value(revisions.get(i));
+            }
+        	writer.endObject();
+        }
+        writer.endArray();
+        
         writer.endObject();
 
         writer.close();

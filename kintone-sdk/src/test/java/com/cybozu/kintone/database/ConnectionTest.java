@@ -199,7 +199,7 @@ public class ConnectionTest {
 		try {
 			Record record;
 			record = new Record();
-			File file = new File("c:\\tmp\\ほげ.jpg");
+			File file = new File("/Users/ryo/tmp/test.jpg");
 			record.setFile("Attachment", file);
 
 			db.insert(app, record);
@@ -211,7 +211,7 @@ public class ConnectionTest {
 			rs.next();
 			List<FileDto> fileNames = rs.getFiles("Attachment");
 			assertEquals(fileNames.size(), 1);
-			assertEquals(fileNames.get(0).getName(), "ほげ.jpg");
+			assertEquals(fileNames.get(0).getName(), "test.jpg");
 			assertTrue(fileNames.get(0).getSize() > 0);
 
 		} catch (Exception e) {
@@ -229,8 +229,8 @@ public class ConnectionTest {
 			Date date = df.parse("2000-01-01 01:34");
 
 			record = new Record();
-			record.setUser("Created_by", "aono");
-			record.setUser("Updated_by", "aono");
+			record.setUser("Created_by", "kadoya");
+			record.setUser("Updated_by", "kadoya");
 			record.setDateTime("Created_datetime", date);
 			record.setDateTime("Updated_datetime", date);
 
@@ -241,10 +241,10 @@ public class ConnectionTest {
 				fail("invalid count");
 			}
 			rs.first();
-			if (!rs.getUser("Created_by").getCode().equals("aono")) {
+			if (!rs.getUser("Created_by").getCode().equals("kadoya")) {
 				fail("failed to update created by");
 			}
-			if (!rs.getUser("Updated_by").getCode().equals("aono")) {
+			if (!rs.getUser("Updated_by").getCode().equals("kadoya")) {
 				fail("failed to update updated by");
 			}
 			if (!rs.getDateTime("Created_datetime").equals(date)) {
@@ -319,7 +319,7 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testUpdateByRecord() {
+	public void testUpdateRecord() {
 		Connection db = getConnection();
 		long app = getAppId();
 		try {
@@ -350,7 +350,7 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testUpdateByRecords() {
+	public void testUpdateRecords() {
 		Connection db = getConnection();
 		long app = getAppId();
 		try {
@@ -381,7 +381,7 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testUpdateByRecords2() {
+	public void testUpdateRecords2() {
 		Connection db = getConnection();
 		long app = getAppId();
 		Record record;
@@ -681,6 +681,7 @@ public class ConnectionTest {
 	@Test
 	public void testGuestSpace() {
 		Connection db = getConnection();
+		
 		db.setGuestSpaceId(getGuestSpaceId());
 		long app = getGuestAppId();
 		try {
@@ -692,6 +693,91 @@ public class ConnectionTest {
 			assertEquals(rs.getString("Single_line_text"), "test");
 			assertEquals(rs.getLong("Number"), new Long(3));
 
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testUpdateAssignee() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			long id = ids.get(1);
+			List<String> codes = new ArrayList<String>();
+			codes.add("Administrator");
+			db.updateAssignees(app, id, codes);
+
+			ResultSet rs = db.select(app, "$id = " + id);
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			
+			List<UserDto> assignees = rs.getUsers("作業者");
+			assertEquals(assignees.size(), 1);
+			assertEquals(assignees.get(0).getCode(), "Administrator");
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testUpdateStatus() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			long id = ids.get(0);
+			db.updateStatus(app, id, "処理開始", "kadoya");
+
+			ResultSet rs = db.select(app, "$id = " + id);
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			
+			List<UserDto> assignees = rs.getUsers("作業者");
+			assertEquals(assignees.size(), 1);
+			assertEquals(assignees.get(0).getCode(), "kadoya");
+			assertEquals(rs.getString("ステータス"), "処理中");
+			
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testUpdateStatusAll() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+						
+			List<String> actions = new ArrayList<String>();
+			List<String> nextAssignees = new ArrayList<String>();
+			List<Long> revisions = new ArrayList<Long>();
+			for (int i = 0; i < ids.size(); i++) {
+				actions.add("処理開始");
+				nextAssignees.add("sato");
+				revisions.add(new Long(-1));
+			}
+			
+			db.updateStatus(app, ids, actions, nextAssignees, revisions);
+
+			ResultSet rs = db.select(app, "$id = " + ids.get(1));
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			
+			List<UserDto> assignees = rs.getUsers("作業者");
+			assertEquals(assignees.size(), 1);
+			assertEquals(assignees.get(0).getCode(), "sato");
+			assertEquals(rs.getString("ステータス"), "処理中");
+
+			
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
 		}

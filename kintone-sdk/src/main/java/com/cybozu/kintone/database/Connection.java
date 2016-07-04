@@ -981,16 +981,34 @@ public class Connection {
      * 
      * @param app
      *            application id
-     * @param record
-     *            updated record object
      * @param key
      *            the key field
+     * @param record
+     *            updated record object
      * @return new revision number
      * @throws DBException
      */
     public long updateRecordByKey(long app, String key, Record record) throws DBException {
-    	
-    	return 0;
+    	Set<Map.Entry<String,Field>> set = record.getEntrySet();
+        for (Map.Entry<String,Field> entry: set) {
+            Field field = entry.getValue();
+            lazyUpload(field); // force lazy upload
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdateByKey(app, key, record);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record.json", json);
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
     }
 
     /**
@@ -998,13 +1016,31 @@ public class Connection {
      * 
      * @param app
      *            application id
-     * @param record
-     *            updated record object
      * @param key
      *            the key field
+     * @param records
+     *            an array of the updated record object
      * @throws DBException
      */
-    public void updateRecordsByKey(long app, String key, Record record) throws DBException {
+    public void updateRecordsByKey(long app, String key, List<Record> records) throws DBException {
+    	// upload files
+        for (Record record: records) {
+            Set<Map.Entry<String,Field>> set = record.getEntrySet();
+            for (Map.Entry<String,Field> entry: set) {
+                Field field = entry.getValue();
+                lazyUpload(field); // force lazy upload
+            }
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdateByKey(app, key, records);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("PUT", "records.json", json);
     }
     
 

@@ -299,7 +299,18 @@ public class JsonParser {
     private void writeField(JsonWriter writer, Field field) throws IOException {
         writer.name(field.getName());
         writer.beginObject();
-        writer.name("value");
+        writeFieldValue(writer, field);
+        writer.endObject();
+    }
+
+    /**
+     * Writes the field value with json writer.
+     * @param writer json writer
+     * @param field field object
+     * @throws IOException
+     */
+    private void writeFieldValue(JsonWriter writer, Field field) throws IOException{
+    	writer.name("value");
         FieldType type = field.getFieldType();
 
         if (field.isEmpty()) {
@@ -373,10 +384,9 @@ public class JsonParser {
             default:
                 writer.value("");
             }
-        }
-        writer.endObject();
+        }	
     }
-
+    
     /**
      * Writes the subtable value to json.
      * @param writer
@@ -594,6 +604,110 @@ public class JsonParser {
             writer.name("record");
             writer.beginObject();
             for (String fieldName : record.getFieldNames()) {
+                Field field = record.getField(fieldName);
+                try {
+                    writeField(writer, field);
+                } catch (TypeMismatchException e) {
+                    e.printStackTrace();
+                }
+            }
+            writer.endObject();
+            writer.endObject();
+        }
+        writer.endArray();
+
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
+     *            application id
+     * @param key
+     *            key field name
+     * @param record
+     *            updated record
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdateByKey(long app, String key, Record record)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        if (record.hasRevision()) {
+            writer.name("revision").value(record.getRevision());
+        }
+        writer.name("updateKey");
+        writer.beginObject();
+        writer.name("field").value(key);
+        writeFieldValue(writer, record.getField(key));
+        writer.endObject();
+        
+        writer.name("record");
+        writer.beginObject();
+        for (String fieldName : record.getFieldNames()) {
+        	if (fieldName == key) continue;
+        	
+            Field field = record.getField(fieldName);
+            try {
+                writeField(writer, field);
+            } catch (TypeMismatchException e) {
+                e.printStackTrace();
+            }
+        }
+        writer.endObject();
+        
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
+     *            application id
+     * @param key
+     *            key field name
+     * @param records
+     *            an array of the updated records
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdateByKey(long app, String key, List<Record> records)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("records");
+
+        writer.beginArray();
+        for (Record record : records) {
+            writer.beginObject();
+            if (record.hasRevision()) {
+                writer.name("revision").value(record.getRevision());
+            }
+            writer.name("updateKey");
+            writer.beginObject();
+            writer.name("field").value(key);
+            writeFieldValue(writer, record.getField(key));
+            writer.endObject();
+            
+            writer.name("record");
+            writer.beginObject();
+            for (String fieldName : record.getFieldNames()) {
+            	if (fieldName == key) continue;
+            	
                 Field field = record.getField(fieldName);
                 try {
                     writeField(writer, field);

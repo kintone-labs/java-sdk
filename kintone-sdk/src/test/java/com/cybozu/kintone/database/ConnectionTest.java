@@ -31,11 +31,15 @@ public class ConnectionTest {
 	}
 
 	private long getGuestSpaceId() {
-		return Integer.valueOf(System.getenv("GUEST_SPACE_ID"));
+		String spaceId = System.getenv("GUEST_SPACE_ID");
+		if (spaceId == null) return 0;
+		return Integer.valueOf(spaceId);
 	}
 
 	private long getGuestAppId() {
-		return Integer.valueOf(System.getenv("GUEST_APP_ID"));
+		String guestAppId = System.getenv("GUEST_APP_ID");
+		if (guestAppId == null) return 0;
+		return Integer.valueOf(guestAppId);
 	}
 
 	@Before
@@ -58,12 +62,15 @@ public class ConnectionTest {
 
 		Record record;
 		record = new Record();
+		record.setString("key", "key1");
 		record.setString("Single_line_text", "foo");
 		records.add(record);
 		record = new Record();
+		record.setString("key", "key2");
 		record.setString("Single_line_text", "bar");
 		records.add(record);
 		record = new Record();
+		record.setString("key", "key3");
 		record.setString("Single_line_text", "baz");
 		records.add(record);
 
@@ -99,18 +106,23 @@ public class ConnectionTest {
 
 			Record record;
 			record = new Record();
+			record.setString("key", "key1");
 			record.setString("Single_line_text", "foo");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key2");
 			record.setString("Single_line_text", "bar");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key3");
 			record.setString("Single_line_text", "foo");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key4");
 			record.setString("Single_line_text", "bar");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key5");
 			record.setString("Single_line_text", "foo");
 			records.add(record);
 			db.insert(app, records);
@@ -682,7 +694,9 @@ public class ConnectionTest {
 	public void testGuestSpace() {
 		Connection db = getConnection();
 		
-		db.setGuestSpaceId(getGuestSpaceId());
+		long spaceId = getGuestSpaceId();
+		if (spaceId <= 0) return;
+		db.setGuestSpaceId(spaceId);
 		long app = getGuestAppId();
 		try {
 			ResultSet rs = db.select(app, "");
@@ -778,6 +792,62 @@ public class ConnectionTest {
 			assertEquals(rs.getString("ステータス"), "処理中");
 
 			
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testUpdateRecordByKey() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			
+			Record record = new Record();
+			record.setRevision(1);
+			record.setString("key", "key1");
+			record.setString("Single_line_text", "hoge");
+			record.setString("文字列__1行_", "ほげ");
+			db.updateRecordByKey(app, "key", record);
+
+			ResultSet rs = db.select(app, "Single_line_text = \"hoge\"");
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			assertEquals(rs.getString("文字列__1行_"), "ほげ");
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testUpdateRecordsByKey() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			
+			List<Record> records = new ArrayList<Record>();
+			Record record;
+			record = new Record();
+			record.setRevision(1);
+			record.setString("key", "key1");
+			record.setString("Single_line_text", "hoge");
+			
+			records.add(record);
+			record = new Record();
+			record.setRevision(1);
+			record.setString("key", "key2");
+			record.setString("Single_line_text", "hoge");
+			records.add(record);
+			db.updateRecordsByKey(app, "key", records);
+
+			ResultSet rs = db.select(app, "Single_line_text = \"hoge\"");
+			if (rs.size() != 2) {
+				fail("failed to update");
+			}
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
 		}

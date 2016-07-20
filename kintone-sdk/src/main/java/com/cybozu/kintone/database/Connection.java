@@ -1441,4 +1441,112 @@ public class Connection {
         
     	return apps;
     }
+    
+    /**
+     * Add comment.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param mentions
+     *            an array of mentions
+     * @throws DBException
+     */
+    public long addComment(long app, long record, String text, List<MentionDto> mentions) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForAddComment(app, record, text, mentions);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("POST", "record/comment.json", json);
+
+        try {
+            return parser.jsonToId(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to id list");
+        }
+    }
+    
+    /**
+     * Delete comment.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param id
+     *            comment id
+     * @throws DBException
+     */
+    public void deleteComment(long app, long record, long id) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForDeleteComment(app, record, id);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("DELETE", "record/comment.json", json);
+    }
+    
+    /**
+     * Get record comments
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param descending
+     *            sort in a descending order if true
+     * @param limit
+     * @param offset
+     * @return the list of comments
+     */
+    public CommentSet getComments(long app, long record, boolean descending, long limit, long offset) throws DBException {
+    	
+    	StringBuilder sb = new StringBuilder();
+        
+    	sb.append("app=");
+    	sb.append(app);
+    	sb.append("&record=");
+    	sb.append(record);
+    	sb.append("&order=");
+        if (descending) {
+        	sb.append("DESC");
+        } else {
+        	sb.append("ASC");        	
+        }
+        
+        if (limit >= 0) {
+        	sb.append("&limit=");
+        	sb.append(limit);
+        }
+        
+        if (offset >= 0) {
+        	sb.append("&offset=");
+        	sb.append(offset);
+        }
+        
+        String query = new String(sb);
+        String response = request("GET", "record/comments.json?" + query, null);
+        JsonParser parser = new JsonParser();
+        CommentSet cs = null;
+        
+        try {
+            cs = parser.jsonToCommentSet(this, response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to commentset");
+        }
+
+        return cs;
+    }
+    
+    public CommentSet getComments(long app, long record, boolean descending) throws DBException {
+    	return getComments(app, record, descending, -1, -1);
+    }
 }

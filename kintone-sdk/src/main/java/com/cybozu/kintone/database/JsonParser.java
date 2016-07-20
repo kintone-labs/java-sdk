@@ -33,11 +33,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import com.cybozu.kintone.database.exception.TypeMismatchException;
 import com.google.gson.Gson;
@@ -803,6 +808,25 @@ public class JsonParser {
     }
     
     /**
+     * Retrieves the id string from json string.
+     * @param json
+     *            a json string
+     * @return the id number
+     * @throws IOException
+     */
+    public long jsonToId(String json) throws IOException {
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        String id = null;
+        if (root.isJsonObject()) {
+        	id = root.getAsJsonObject().get("id").getAsString();
+        }
+        
+        return Long.valueOf(id);
+    }
+    
+    /**
      * Convert json string to AppDto.
      * @param json
      *            a json string
@@ -967,5 +991,154 @@ public class JsonParser {
 
         writer.close();
         return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to add comment.
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param mentions
+     *            an array of mentions
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForAddComment(long app, long record, String text, List<MentionDto> mentions) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("record").value(record);
+        
+        writer.name("comment");
+        writer.beginObject();
+        
+        writer.name("text").value(text);
+        
+        writer.name("mentions");
+        writer.beginArray();
+        for (MentionDto mention: mentions) {
+        	writer.beginObject();
+        	writer.name("code").value(mention.getCode());
+        	writer.name("type").value(mention.getType());
+        	writer.endObject();
+        }
+        writer.endArray();
+        writer.endObject();
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to delete comment.
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param id
+     *            comment id
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForDeleteComment(long app, long record, long id) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("record").value(record);
+        writer.name("comment").value(id);
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Converts the json string to the commentset object.
+     * @param json
+     *            a json string
+     * @return commentset object
+     * @throws IOException
+     */
+    public CommentSet jsonToCommentSet(Connection con, String json)
+            throws IOException {
+
+        CommentSet cs = new CommentSet();
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        if (root.isJsonObject()) {
+        	JsonObject obj = root.getAsJsonObject();
+            JsonArray comments = obj.get("comments").getAsJsonArray();
+            for (JsonElement elem: comments) {
+                Comment comment = readComment(elem);
+                if (comment != null) {
+                    cs.add(comment);
+                }
+            }
+            
+            cs.setNewer(obj.get("newer").getAsBoolean());
+            cs.setOlder(obj.get("older").getAsBoolean());
+        }
+        return cs;
+    }
+    
+    private Date getDateTime(String strDate) {
+        if (strDate == null || strDate.isEmpty())
+            return null;
+        try {
+            DateFormat df;
+            if (strDate.indexOf('.') > 0) {
+            	df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.000'Z'");
+            } else {
+            	df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");            	
+            }
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return df.parse(strDate);
+        } catch (ParseException e) {
+            throw new TypeMismatchException();
+        }
+    }
+    /**
+     * Reads and parses each comment element.
+     * @param elem
+     *            a json element represents a comment object
+     * @return the comment object created
+     * @throws IOException
+     */
+    private Comment readComment(JsonElement elem) throws IOException {
+
+        Comment comment = null;
+        Gson gson = new Gson();
+
+        if (elem.isJsonObject()) {
+            JsonObject obj = elem.getAsJsonObject();
+            long id = obj.get("id").getAsLong();
+            String text = obj.get("text").getAsString();
+            Date createdAt = getDateTime(obj.get("createdAt").getAsString());
+            
+            Type userElementType = new TypeToken<UserDto>() {
+            }.getType();
+            
+            UserDto user = gson.fromJson(obj.getAsJsonObject("creator"), userElementType);
+                       
+            Type mentionsElementType = new TypeToken<Collection<MentionDto>>() {
+            }.getType();
+            
+            List<MentionDto> mentions = gson.fromJson(obj.getAsJsonArray("mentions"), mentionsElementType);
+            
+            comment = new Comment(id, text, createdAt, user, mentions);
+        }
+
+        return comment;
     }
 } 

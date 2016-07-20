@@ -80,6 +80,27 @@ public class ConnectionTest {
 		}
 		return ids;
 	}
+	
+	private List<Long> AddComments(long app, long record) throws DBException {
+
+		Connection db = getConnection();
+		List<Long> ids = new ArrayList<Long>();
+		
+		List<MentionDto> mentions = new ArrayList<MentionDto>();
+		mentions.add(new MentionDto("kadoya", "USER"));
+		mentions.add(new MentionDto("sato", "USER"));
+		ids.add(db.addComment(app, record, "コメント1\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント2\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント3\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント4\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント5\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント6\nthis is a comment", mentions));
+
+		if (ids.size() != 6) {
+			fail("invalid count");
+		}
+		return ids;
+	}
 
 	@Test
 	public void testApiToken() {
@@ -848,6 +869,54 @@ public class ConnectionTest {
 			if (rs.size() != 2) {
 				fail("failed to update");
 			}
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testAddComment() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> recordIds = insertRecords();
+			long record = recordIds.get(0);
+			List<MentionDto> mentions = new ArrayList<MentionDto>();
+			mentions.add(new MentionDto("kadoya", "USER"));
+			mentions.add(new MentionDto("sato", "USER"));
+			String text = "this is a comment";
+			long id = db.addComment(app, record, text, mentions);
+			
+			CommentSet cs = db.getComments(app, record, true);
+			assertEquals(cs.size(), 1);
+			assertEquals(cs.hasNewer(), false);
+			assertEquals(cs.hasOlder(), false);
+			
+			cs.next();
+			assertEquals(cs.getId().longValue(), id);
+			assertEquals((cs.getText().indexOf(text) > 0), true);
+			assertEquals(cs.getCreator().getCode(), "Administrator");
+			assertEquals(cs.getMentions().size(), 2);
+			assertEquals(cs.getMentions().get(1).getCode(), "sato");
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testRemoveComment() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> recordIds = insertRecords();
+			long record = recordIds.get(0);
+			List<MentionDto> mentions = new ArrayList<MentionDto>();
+			mentions.add(new MentionDto("kadoya", "USER"));
+			mentions.add(new MentionDto("sato", "USER"));
+			long id = db.addComment(app, record, "コメント\nthis is a comment", mentions);
+			db.deleteComment(app,  record,  id);
+			CommentSet cs = db.getComments(app, record, true);
+			assertEquals(cs.size(), 0);
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
 		}

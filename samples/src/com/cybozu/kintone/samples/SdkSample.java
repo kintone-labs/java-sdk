@@ -21,8 +21,10 @@ import java.util.Date;
 import java.util.List;
 
 import com.cybozu.kintone.database.BulkRequest;
+import com.cybozu.kintone.database.CommentSet;
 import com.cybozu.kintone.database.Connection;
 import com.cybozu.kintone.database.FileDto;
+import com.cybozu.kintone.database.MentionDto;
 import com.cybozu.kintone.database.Record;
 import com.cybozu.kintone.database.ResultSet;
 import com.cybozu.kintone.database.UserDto;
@@ -61,7 +63,7 @@ public class SdkSample {
         // select records
         ResultSet rs = null;
         try {
-            rs = db.select(app, query, null);
+            rs = db.select(app, query);
         } catch (DBException e1) {
             e1.printStackTrace();
         }
@@ -95,6 +97,14 @@ public class SdkSample {
                 e.printStackTrace();
             }
         }
+        
+        try {
+        	// get records with total count
+            rs = db.selectWithTotalCount(app, query);
+        } catch (DBException e1) {
+            e1.printStackTrace();
+        }
+        long totalCount = rs.getTotalCount();
 
         ArrayList<Record> list = new ArrayList<Record>();
 
@@ -157,7 +167,30 @@ public class SdkSample {
         } catch (DBException e1) {
             e1.printStackTrace();
         }
+        
+        // update record by specified key
+        try {
+        	db.updateRecordByKey(app, "name", record);
+        } catch (DBException e1) {
+            e1.printStackTrace();
+        }
 
+        // update status
+        try {
+            db.updateStatus(app, 1, "処理開始", "user1");
+        } catch (DBException e1) {
+            e1.printStackTrace();
+        }
+        
+        // update assignee
+        try {
+            List<String> codes = new ArrayList<String>();
+    		codes.add("Administrator");
+    		db.updateAssignees(app, 1, codes);
+        } catch (DBException e1) {
+            e1.printStackTrace();
+        }
+        
         // delete a record
         try {
             db.delete(app, 1);
@@ -212,6 +245,29 @@ public class SdkSample {
             e1.printStackTrace();
         }
         
+        // record comment
+		long recordId = 1;
+		try {
+			// get comments
+			CommentSet cs = db.getComments(app, recordId, true);
+			while (cs.next()) {
+				String text1 = cs.getText();
+			}
+			cs.next();
+			
+			// add comment
+	        List<MentionDto> mentions = new ArrayList<MentionDto>();
+			mentions.add(new MentionDto("user1", "USER"));
+			mentions.add(new MentionDto("user2", "USER"));
+			String text = "this is a comment";
+			long id = db.addComment(app, recordId, text, mentions);
+			
+			// remove comment
+			db.deleteComment(app,  recordId,  id);
+		} catch (DBException e1) {
+            e1.printStackTrace();
+        }
+		
         db.close();
 
     }

@@ -711,6 +711,21 @@ public class Connection {
             throws DBException {
         return select(app, query, null);
     }
+    
+    /**
+     * Selects the records and total count from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
+     * @return ResultSet object
+     * @throws DBException
+     */
+    public ResultSet selectWithTotalCount(long app, String query)
+            throws DBException {
+        return select(app, query, null, true);
+    }
 
     /**
      * Selects the records from kintone using a query string.
@@ -725,6 +740,42 @@ public class Connection {
      * @throws DBException
      */
     public ResultSet select(long app, String query, String[] columns)
+            throws DBException {
+    	return select(app, query, columns, false);
+    }
+    
+    /**
+     * Selects the records and total count from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
+     * @param columns
+     *            column names if needed
+     * @return ResultSet object
+     * @throws DBException
+     */
+    public ResultSet selectWithTotalCount(long app, String query, String[] columns)
+            throws DBException {
+    	return select(app, query, columns, false);
+    }
+    
+    /**
+     * Selects the records from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
+     * @param columns
+     *            column names if needed
+     * @param totalCount
+     *            retrieve total count(true/false)
+     * @return ResultSet object
+     * @throws DBException
+     */
+    private ResultSet select(long app, String query, String[] columns, boolean totalCount)
             throws DBException {
 
         try {
@@ -747,6 +798,10 @@ public class Connection {
                 i++;
             }
         }
+        if (totalCount) {
+        	sb.append("&totalCount=true");
+        }
+        
         String api = new String(sb);
         String response = request("GET", "records.json?" + api, null);
         JsonParser parser = new JsonParser();

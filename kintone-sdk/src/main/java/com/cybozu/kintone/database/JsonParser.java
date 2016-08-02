@@ -97,14 +97,22 @@ public class JsonParser {
         JsonElement root = parser.parse(json);
         
         if (root.isJsonObject()) {
-            JsonArray records = root.getAsJsonObject().get("records").getAsJsonArray();
+        	JsonObject rootObject = root.getAsJsonObject();
+            JsonArray records = rootObject.get("records").getAsJsonArray();
             for (JsonElement elem: records) {
                 Record record = readRecord(elem);
                 if (record != null) {
                     rs.add(record);
                 }
             }
+            
+            if (!rootObject.get("totalCount").isJsonNull()) {
+            	rs.setTotalCount(rootObject.get("totalCount").getAsLong());
+            	
+            }
         }
+        
+        
         return rs;
     }
     

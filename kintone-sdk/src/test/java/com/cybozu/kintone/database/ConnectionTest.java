@@ -152,6 +152,14 @@ public class ConnectionTest {
 			if (rs.size() != 3) {
 				fail("invalid count " + rs.size());
 			}
+			
+			rs = db.selectWithTotalCount(app, "limit 1");
+			if (rs.size() != 1) {
+				fail("invalid count " + rs.size());
+			}
+			if (rs.getTotalCount() != 5) {
+				fail("invalid total count " + rs.getTotalCount());
+			}
 		} catch (Exception e) {
 			fail("failed to select");
 		}

@@ -33,6 +33,7 @@ public class ResultSet {
 
     private List<Record> records = new ArrayList<Record>();
     private int index = 0;
+    private Long totalCount = null;
     private Record current = null;
     private Connection connection = null;
 
@@ -161,6 +162,25 @@ public class ResultSet {
      */
     public boolean isEmpty(String name) {
         return current.isEmpty(name);
+    }
+    
+    /**
+     * Gets total count.
+     * 
+     * @return total count
+     */
+    public Long getTotalCount() {
+    	return this.totalCount;
+    }
+    
+    /**
+     * Sets total count
+     * 
+     * @param totalCount
+     *            total count
+     */
+    public void setTotalCount(long totalCount) {
+        this.totalCount = totalCount;
     }
     
     /**

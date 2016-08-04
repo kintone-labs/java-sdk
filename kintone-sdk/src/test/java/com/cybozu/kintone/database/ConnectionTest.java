@@ -31,11 +31,15 @@ public class ConnectionTest {
 	}
 
 	private long getGuestSpaceId() {
-		return Integer.valueOf(System.getenv("GUEST_SPACE_ID"));
+		String spaceId = System.getenv("GUEST_SPACE_ID");
+		if (spaceId == null) return 0;
+		return Integer.valueOf(spaceId);
 	}
 
 	private long getGuestAppId() {
-		return Integer.valueOf(System.getenv("GUEST_APP_ID"));
+		String guestAppId = System.getenv("GUEST_APP_ID");
+		if (guestAppId == null) return 0;
+		return Integer.valueOf(guestAppId);
 	}
 
 	@Before
@@ -58,17 +62,41 @@ public class ConnectionTest {
 
 		Record record;
 		record = new Record();
+		record.setString("key", "key1");
 		record.setString("Single_line_text", "foo");
 		records.add(record);
 		record = new Record();
+		record.setString("key", "key2");
 		record.setString("Single_line_text", "bar");
 		records.add(record);
 		record = new Record();
+		record.setString("key", "key3");
 		record.setString("Single_line_text", "baz");
 		records.add(record);
 
 		List<Long> ids = db.insert(app, records);
 		if (ids.size() != 3) {
+			fail("invalid count");
+		}
+		return ids;
+	}
+	
+	private List<Long> AddComments(long app, long record) throws DBException {
+
+		Connection db = getConnection();
+		List<Long> ids = new ArrayList<Long>();
+		
+		List<MentionDto> mentions = new ArrayList<MentionDto>();
+		mentions.add(new MentionDto("kadoya", "USER"));
+		mentions.add(new MentionDto("sato", "USER"));
+		ids.add(db.addComment(app, record, "コメント1\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント2\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント3\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント4\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント5\nthis is a comment", mentions));
+		ids.add(db.addComment(app, record, "コメント6\nthis is a comment", mentions));
+
+		if (ids.size() != 6) {
 			fail("invalid count");
 		}
 		return ids;
@@ -99,18 +127,23 @@ public class ConnectionTest {
 
 			Record record;
 			record = new Record();
+			record.setString("key", "key1");
 			record.setString("Single_line_text", "foo");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key2");
 			record.setString("Single_line_text", "bar");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key3");
 			record.setString("Single_line_text", "foo");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key4");
 			record.setString("Single_line_text", "bar");
 			records.add(record);
 			record = new Record();
+			record.setString("key", "key5");
 			record.setString("Single_line_text", "foo");
 			records.add(record);
 			db.insert(app, records);
@@ -118,6 +151,14 @@ public class ConnectionTest {
 			ResultSet rs = db.select(app, "Single_line_text = \"foo\"");
 			if (rs.size() != 3) {
 				fail("invalid count " + rs.size());
+			}
+			
+			rs = db.selectWithTotalCount(app, "limit 1");
+			if (rs.size() != 1) {
+				fail("invalid count " + rs.size());
+			}
+			if (rs.getTotalCount() != 5) {
+				fail("invalid total count " + rs.getTotalCount());
 			}
 		} catch (Exception e) {
 			fail("failed to select");
@@ -199,7 +240,7 @@ public class ConnectionTest {
 		try {
 			Record record;
 			record = new Record();
-			File file = new File("c:\\tmp\\ほげ.jpg");
+			File file = new File("/Users/ryo/tmp/test.jpg");
 			record.setFile("Attachment", file);
 
 			db.insert(app, record);
@@ -211,7 +252,7 @@ public class ConnectionTest {
 			rs.next();
 			List<FileDto> fileNames = rs.getFiles("Attachment");
 			assertEquals(fileNames.size(), 1);
-			assertEquals(fileNames.get(0).getName(), "ほげ.jpg");
+			assertEquals(fileNames.get(0).getName(), "test.jpg");
 			assertTrue(fileNames.get(0).getSize() > 0);
 
 		} catch (Exception e) {
@@ -229,8 +270,8 @@ public class ConnectionTest {
 			Date date = df.parse("2000-01-01 01:34");
 
 			record = new Record();
-			record.setUser("Created_by", "aono");
-			record.setUser("Updated_by", "aono");
+			record.setUser("Created_by", "kadoya");
+			record.setUser("Updated_by", "kadoya");
 			record.setDateTime("Created_datetime", date);
 			record.setDateTime("Updated_datetime", date);
 
@@ -241,10 +282,10 @@ public class ConnectionTest {
 				fail("invalid count");
 			}
 			rs.first();
-			if (!rs.getUser("Created_by").getCode().equals("aono")) {
+			if (!rs.getUser("Created_by").getCode().equals("kadoya")) {
 				fail("failed to update created by");
 			}
-			if (!rs.getUser("Updated_by").getCode().equals("aono")) {
+			if (!rs.getUser("Updated_by").getCode().equals("kadoya")) {
 				fail("failed to update updated by");
 			}
 			if (!rs.getDateTime("Created_datetime").equals(date)) {
@@ -319,7 +360,7 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testUpdateByRecord() {
+	public void testUpdateRecord() {
 		Connection db = getConnection();
 		long app = getAppId();
 		try {
@@ -334,7 +375,7 @@ public class ConnectionTest {
 			record.setId(rs.getId());
 			record.setRevision(rs.getRevision());
 			record.setString("Single_line_text", "hoge");
-			db.updateByRecord(app, record);
+			db.updateRecord(app, record);
 
 			rs = db.select(app, "Single_line_text = \"hoge\"");
 			if (rs.size() != 1) {
@@ -350,7 +391,7 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testUpdateByRecords() {
+	public void testUpdateRecords() {
 		Connection db = getConnection();
 		long app = getAppId();
 		try {
@@ -369,7 +410,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.updateByRecords(app, records);
+			db.updateRecords(app, records);
 
 			rs = db.select(app, "Single_line_text = \"hoge\"");
 			if (rs.size() != 3) {
@@ -381,7 +422,7 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testUpdateByRecords2() {
+	public void testUpdateRecords2() {
 		Connection db = getConnection();
 		long app = getAppId();
 		Record record;
@@ -400,7 +441,7 @@ public class ConnectionTest {
 			rs.next();
 			record.setId(rs.getId());
 			record.setString("Single_line_text", "hoge");
-			db.updateByRecord(app, record);
+			db.updateRecord(app, record);
 
 		} catch (Exception e) {
 			fail("db exception");
@@ -416,7 +457,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.updateByRecords(app, records);
+			db.updateRecords(app, records);
 			fail("no conflict");
 		} catch (Exception e) {
 		}
@@ -492,7 +533,7 @@ public class ConnectionTest {
 			rs.next();
 			record.setId(rs.getId());
 			record.setRevision(rs.getRevision());
-			db.deleteByRecord(app, record);
+			db.deleteRecord(app, record);
 
 			rs = db.select(app, "");
 			if (rs.size() != 2) {
@@ -522,7 +563,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.deleteByRecords(app, records);
+			db.deleteRecords(app, records);
 
 			rs = db.select(app, "");
 			if (rs.size() != 0) {
@@ -553,7 +594,7 @@ public class ConnectionTest {
 			rs.next();
 			record.setId(rs.getId());
 			record.setString("Single_line_text", "hoge");
-			db.updateByRecord(app, record);
+			db.updateRecord(app, record);
 
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
@@ -569,7 +610,7 @@ public class ConnectionTest {
 
 				records.add(record);
 			}
-			db.deleteByRecords(app, records);
+			db.deleteRecords(app, records);
 			fail("no conflict");
 		} catch (Exception e) {
 		}
@@ -681,7 +722,10 @@ public class ConnectionTest {
 	@Test
 	public void testGuestSpace() {
 		Connection db = getConnection();
-		db.setGuestSpaceId(getGuestSpaceId());
+		
+		long spaceId = getGuestSpaceId();
+		if (spaceId <= 0) return;
+		db.setGuestSpaceId(spaceId);
 		long app = getGuestAppId();
 		try {
 			ResultSet rs = db.select(app, "");
@@ -692,6 +736,195 @@ public class ConnectionTest {
 			assertEquals(rs.getString("Single_line_text"), "test");
 			assertEquals(rs.getLong("Number"), new Long(3));
 
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testUpdateAssignee() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			long id = ids.get(1);
+			List<String> codes = new ArrayList<String>();
+			codes.add("Administrator");
+			db.updateAssignees(app, id, codes);
+
+			ResultSet rs = db.select(app, "$id = " + id);
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			
+			List<UserDto> assignees = rs.getUsers("作業者");
+			assertEquals(assignees.size(), 1);
+			assertEquals(assignees.get(0).getCode(), "Administrator");
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testUpdateStatus() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			long id = ids.get(0);
+			db.updateStatus(app, id, "処理開始", "kadoya");
+
+			ResultSet rs = db.select(app, "$id = " + id);
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			
+			List<UserDto> assignees = rs.getUsers("作業者");
+			assertEquals(assignees.size(), 1);
+			assertEquals(assignees.get(0).getCode(), "kadoya");
+			assertEquals(rs.getString("ステータス"), "処理中");
+			
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testUpdateStatusAll() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+						
+			List<String> actions = new ArrayList<String>();
+			List<String> nextAssignees = new ArrayList<String>();
+			List<Long> revisions = new ArrayList<Long>();
+			for (int i = 0; i < ids.size(); i++) {
+				actions.add("処理開始");
+				nextAssignees.add("sato");
+				revisions.add(new Long(-1));
+			}
+			
+			db.updateStatus(app, ids, actions, nextAssignees, revisions);
+
+			ResultSet rs = db.select(app, "$id = " + ids.get(1));
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			
+			List<UserDto> assignees = rs.getUsers("作業者");
+			assertEquals(assignees.size(), 1);
+			assertEquals(assignees.get(0).getCode(), "sato");
+			assertEquals(rs.getString("ステータス"), "処理中");
+
+			
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testUpdateRecordByKey() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			
+			Record record = new Record();
+			record.setRevision(1);
+			record.setString("key", "key1");
+			record.setString("Single_line_text", "hoge");
+			record.setString("文字列__1行_", "ほげ");
+			db.updateRecordByKey(app, "key", record);
+
+			ResultSet rs = db.select(app, "Single_line_text = \"hoge\"");
+			if (rs.size() != 1) {
+				fail("failed to update");
+			}
+			rs.next();
+			assertEquals(rs.getString("文字列__1行_"), "ほげ");
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+
+	@Test
+	public void testUpdateRecordsByKey() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> ids = insertRecords();
+			
+			List<Record> records = new ArrayList<Record>();
+			Record record;
+			record = new Record();
+			record.setRevision(1);
+			record.setString("key", "key1");
+			record.setString("Single_line_text", "hoge");
+			
+			records.add(record);
+			record = new Record();
+			record.setRevision(1);
+			record.setString("key", "key2");
+			record.setString("Single_line_text", "hoge");
+			records.add(record);
+			db.updateRecordsByKey(app, "key", records);
+
+			ResultSet rs = db.select(app, "Single_line_text = \"hoge\"");
+			if (rs.size() != 2) {
+				fail("failed to update");
+			}
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testAddComment() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> recordIds = insertRecords();
+			long record = recordIds.get(0);
+			List<MentionDto> mentions = new ArrayList<MentionDto>();
+			mentions.add(new MentionDto("kadoya", "USER"));
+			mentions.add(new MentionDto("sato", "USER"));
+			String text = "this is a comment";
+			long id = db.addComment(app, record, text, mentions);
+			
+			CommentSet cs = db.getComments(app, record, true);
+			assertEquals(cs.size(), 1);
+			assertEquals(cs.hasNewer(), false);
+			assertEquals(cs.hasOlder(), false);
+			
+			cs.next();
+			assertEquals(cs.getId().longValue(), id);
+			assertEquals((cs.getText().indexOf(text) > 0), true);
+			assertEquals(cs.getCreator().getCode(), "Administrator");
+			assertEquals(cs.getMentions().size(), 2);
+			assertEquals(cs.getMentions().get(1).getCode(), "sato");
+		} catch (Exception e) {
+			fail("db exception:" + e.getMessage());
+		}
+	}
+	
+	@Test
+	public void testRemoveComment() {
+		Connection db = getConnection();
+		long app = getAppId();
+		try {
+			List<Long> recordIds = insertRecords();
+			long record = recordIds.get(0);
+			List<MentionDto> mentions = new ArrayList<MentionDto>();
+			mentions.add(new MentionDto("kadoya", "USER"));
+			mentions.add(new MentionDto("sato", "USER"));
+			long id = db.addComment(app, record, "コメント\nthis is a comment", mentions);
+			db.deleteComment(app,  record,  id);
+			CommentSet cs = db.getComments(app, record, true);
+			assertEquals(cs.size(), 0);
 		} catch (Exception e) {
 			fail("db exception:" + e.getMessage());
 		}

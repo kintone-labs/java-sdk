@@ -537,6 +537,9 @@ public class Connection {
         
         String response;
         try {
+        	if (err == null) {
+        		err = conn.getInputStream();
+        	}
             response = streamToString(err);
         } catch (IOException e) {
             return null;
@@ -708,6 +711,21 @@ public class Connection {
             throws DBException {
         return select(app, query, null);
     }
+    
+    /**
+     * Selects the records and total count from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
+     * @return ResultSet object
+     * @throws DBException
+     */
+    public ResultSet selectWithTotalCount(long app, String query)
+            throws DBException {
+        return select(app, query, null, true);
+    }
 
     /**
      * Selects the records from kintone using a query string.
@@ -722,6 +740,42 @@ public class Connection {
      * @throws DBException
      */
     public ResultSet select(long app, String query, String[] columns)
+            throws DBException {
+    	return select(app, query, columns, false);
+    }
+    
+    /**
+     * Selects the records and total count from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
+     * @param columns
+     *            column names if needed
+     * @return ResultSet object
+     * @throws DBException
+     */
+    public ResultSet selectWithTotalCount(long app, String query, String[] columns)
+            throws DBException {
+    	return select(app, query, columns, false);
+    }
+    
+    /**
+     * Selects the records from kintone using a query string.
+     * 
+     * @param app
+     *            application id
+     * @param query
+     *            query string
+     * @param columns
+     *            column names if needed
+     * @param totalCount
+     *            retrieve total count(true/false)
+     * @return ResultSet object
+     * @throws DBException
+     */
+    private ResultSet select(long app, String query, String[] columns, boolean totalCount)
             throws DBException {
 
         try {
@@ -744,6 +798,10 @@ public class Connection {
                 i++;
             }
         }
+        if (totalCount) {
+        	sb.append("&totalCount=true");
+        }
+        
         String api = new String(sb);
         String response = request("GET", "records.json?" + api, null);
         JsonParser parser = new JsonParser();
@@ -857,14 +915,33 @@ public class Connection {
      *            application id
      * @param record
      *            updated record object
+     * @return new revision number
      * @throws DBException
      */
-    public void updateByRecord(long app, Record record) throws DBException {
-        List<Record> list = new ArrayList<Record>();
-        list.add(record);
-        updateByRecords(app, list);
-    }
+    public long updateRecord(long app, Record record) throws DBException {
+    	
+    	Set<Map.Entry<String,Field>> set = record.getEntrySet();
+        for (Map.Entry<String,Field> entry: set) {
+            Field field = entry.getValue();
+            lazyUpload(field); // force lazy upload
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdate(app, record);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
 
+        String response = request("PUT", "record.json", json);
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
+    }
+    
     /**
      * Updates records.
      * 
@@ -905,7 +982,7 @@ public class Connection {
      *            an array of the updated record object
      * @throws DBException
      */
-    public void updateByRecords(long app, List<Record> records) throws DBException {
+    public void updateRecords(long app, List<Record> records) throws DBException {
         // upload files
         for (Record record: records) {
             Set<Map.Entry<String,Field>> set = record.getEntrySet();
@@ -955,6 +1032,175 @@ public class Connection {
     }
 
     /**
+     * Updates a record by specified key.
+     * 
+     * @param app
+     *            application id
+     * @param key
+     *            the key field
+     * @param record
+     *            updated record object
+     * @return new revision number
+     * @throws DBException
+     */
+    public long updateRecordByKey(long app, String key, Record record) throws DBException {
+    	Set<Map.Entry<String,Field>> set = record.getEntrySet();
+        for (Map.Entry<String,Field> entry: set) {
+            Field field = entry.getValue();
+            lazyUpload(field); // force lazy upload
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdateByKey(app, key, record);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record.json", json);
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
+    }
+
+    /**
+     * Updates records by specified key.
+     * 
+     * @param app
+     *            application id
+     * @param key
+     *            the key field
+     * @param records
+     *            an array of the updated record object
+     * @throws DBException
+     */
+    public void updateRecordsByKey(long app, String key, List<Record> records) throws DBException {
+    	// upload files
+        for (Record record: records) {
+            Set<Map.Entry<String,Field>> set = record.getEntrySet();
+            for (Map.Entry<String,Field> entry: set) {
+                Field field = entry.getValue();
+                lazyUpload(field); // force lazy upload
+            }
+        }
+    
+        JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.recordsToJsonForUpdateByKey(app, key, records);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("PUT", "records.json", json);
+    }
+    
+
+    /**
+     * Updates assignees.
+     * 
+     * @param app
+     *            application id
+     * @param id
+     *            record id
+     * @param code
+     *            array of the code of the assigned users
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return the new revision number
+     * @throws DBException
+     */
+    public long updateAssignees(long app, long id, List<String> codes, long revision) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForUpdateAssignees(app, id, codes, revision);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record/assignees.json", json);
+
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
+    }
+    
+    public long updateAssignees(long app, long id, List<String> codes) throws DBException {
+    	return updateAssignees(app, id, codes, -1);
+    }
+    
+    /**
+     * Updates status.
+     * 
+     * @param app
+     *            application id
+     * @param id
+     *            record id
+     * @param action
+     *            action name
+     * @param assignee
+     *            login name of the assignee
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return the new revision number
+     * @throws DBException
+     */
+    public long updateStatus(long app, long id, String action, String assignee, long revision) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForUpdateStatus(app, id, action, assignee, revision);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("PUT", "record/status.json", json);
+
+        try {
+            return parser.jsonToRevision(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to the revision number");
+        }
+    }
+    
+    public long updateStatus(long app, long id, String action, String assignee) throws DBException {
+    	return updateStatus(app, id, action, assignee, -1);
+    }
+    
+    /**
+     * Updates status.
+     * 
+     * @param app
+     *            application id
+     * @param ids
+     *            an array of the record id
+     * @param actions
+     *            an array of the action name
+     * @param assignees
+     *            an array of the login name of the assignee
+     * @param revisions
+     *            an array of the revision number (-1 means "not set")
+     * @throws DBException
+     */
+    public void updateStatus(long app, List<Long> ids, List<String> actions, List<String> assignees, List<Long> revisions) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForUpdateStatus(app, ids, actions, assignees, revisions);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("PUT", "records/status.json", json);
+    }
+    
+    /**
      * Deletes a record.
      * 
      * @param app
@@ -978,10 +1224,10 @@ public class Connection {
      *            a record object to be deleted
      * @throws DBException
      */
-    public void deleteByRecord(long app, Record record) throws DBException {
+    public void deleteRecord(long app, Record record) throws DBException {
         List<Record> list = new ArrayList<Record>();
         list.add(record);
-        deleteByRecords(app, list);
+        deleteRecords(app, list);
     }
     
     /**
@@ -993,7 +1239,7 @@ public class Connection {
      *            a list of the record object to be deleted
      * @throws DBException
      */
-    public void deleteByRecords(long app, List<Record> records) throws DBException {
+    public void deleteRecords(long app, List<Record> records) throws DBException {
         
         JsonParser parser = new JsonParser();
         String json;
@@ -1021,7 +1267,7 @@ public class Connection {
             record.setId(id);
             records.add(record);
         }
-        deleteByRecords(app, records);
+        deleteRecords(app, records);
     }
 
     /**
@@ -1045,7 +1291,7 @@ public class Connection {
             record.setId(rs.getId());
             records.add(record);
         }
-        deleteByRecords(app, records);
+        deleteRecords(app, records);
     }
 
     /**
@@ -1249,5 +1495,113 @@ public class Connection {
         }
         
     	return apps;
+    }
+    
+    /**
+     * Add comment.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param mentions
+     *            an array of mentions
+     * @throws DBException
+     */
+    public long addComment(long app, long record, String text, List<MentionDto> mentions) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForAddComment(app, record, text, mentions);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        String response = request("POST", "record/comment.json", json);
+
+        try {
+            return parser.jsonToId(response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to id list");
+        }
+    }
+    
+    /**
+     * Delete comment.
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param id
+     *            comment id
+     * @throws DBException
+     */
+    public void deleteComment(long app, long record, long id) throws DBException {
+    	JsonParser parser = new JsonParser();
+        String json;
+        try {
+            json = parser.generateForDeleteComment(app, record, id);
+        } catch (IOException e) {
+            throw new ParseException("failed to encode to json");
+        }
+
+        request("DELETE", "record/comment.json", json);
+    }
+    
+    /**
+     * Get record comments
+     * 
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param descending
+     *            sort in a descending order if true
+     * @param limit
+     * @param offset
+     * @return the list of comments
+     */
+    public CommentSet getComments(long app, long record, boolean descending, long limit, long offset) throws DBException {
+    	
+    	StringBuilder sb = new StringBuilder();
+        
+    	sb.append("app=");
+    	sb.append(app);
+    	sb.append("&record=");
+    	sb.append(record);
+    	sb.append("&order=");
+        if (descending) {
+        	sb.append("DESC");
+        } else {
+        	sb.append("ASC");        	
+        }
+        
+        if (limit >= 0) {
+        	sb.append("&limit=");
+        	sb.append(limit);
+        }
+        
+        if (offset >= 0) {
+        	sb.append("&offset=");
+        	sb.append(offset);
+        }
+        
+        String query = new String(sb);
+        String response = request("GET", "record/comments.json?" + query, null);
+        JsonParser parser = new JsonParser();
+        CommentSet cs = null;
+        
+        try {
+            cs = parser.jsonToCommentSet(this, response);
+        } catch (IOException e) {
+            throw new ParseException("failed to parse json to commentset");
+        }
+
+        return cs;
+    }
+    
+    public CommentSet getComments(long app, long record, boolean descending) throws DBException {
+    	return getComments(app, record, descending, -1, -1);
     }
 }

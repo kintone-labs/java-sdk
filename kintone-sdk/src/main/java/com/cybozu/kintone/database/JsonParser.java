@@ -33,11 +33,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import com.cybozu.kintone.database.exception.TypeMismatchException;
 import com.google.gson.Gson;
@@ -92,14 +97,22 @@ public class JsonParser {
         JsonElement root = parser.parse(json);
         
         if (root.isJsonObject()) {
-            JsonArray records = root.getAsJsonObject().get("records").getAsJsonArray();
+        	JsonObject rootObject = root.getAsJsonObject();
+            JsonArray records = rootObject.get("records").getAsJsonArray();
             for (JsonElement elem: records) {
                 Record record = readRecord(elem);
                 if (record != null) {
                     rs.add(record);
                 }
             }
+            
+            if (!rootObject.get("totalCount").isJsonNull()) {
+            	rs.setTotalCount(rootObject.get("totalCount").getAsLong());
+            	
+            }
         }
+        
+        
         return rs;
     }
     
@@ -301,7 +314,18 @@ public class JsonParser {
     private void writeField(JsonWriter writer, Field field) throws IOException {
         writer.name(field.getName());
         writer.beginObject();
-        writer.name("value");
+        writeFieldValue(writer, field);
+        writer.endObject();
+    }
+
+    /**
+     * Writes the field value with json writer.
+     * @param writer json writer
+     * @param field field object
+     * @throws IOException
+     */
+    private void writeFieldValue(JsonWriter writer, Field field) throws IOException{
+    	writer.name("value");
         FieldType type = field.getFieldType();
 
         if (field.isEmpty()) {
@@ -377,10 +401,9 @@ public class JsonParser {
             default:
                 writer.value("");
             }
-        }
-        writer.endObject();
+        }	
     }
-
+    
     /**
      * Writes the subtable value to json.
      * @param writer
@@ -533,6 +556,45 @@ public class JsonParser {
     /**
      * Generates the json string for update method.
      * @param app
+     *            application id
+     * @param record
+     *            updated record
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdate(long app, Record record)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("id").value(record.getId());
+        if (record.hasRevision()) {
+            writer.name("revision").value(record.getRevision());
+        }
+        writer.name("record");
+        writer.beginObject();
+        for (String fieldName : record.getFieldNames()) {
+            Field field = record.getField(fieldName);
+            try {
+                writeField(writer, field);
+            } catch (TypeMismatchException e) {
+                e.printStackTrace();
+            }
+        }
+        writer.endObject();
+        
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
      *            the application id
      * @param records
      *            an array of the updated records
@@ -559,6 +621,110 @@ public class JsonParser {
             writer.name("record");
             writer.beginObject();
             for (String fieldName : record.getFieldNames()) {
+                Field field = record.getField(fieldName);
+                try {
+                    writeField(writer, field);
+                } catch (TypeMismatchException e) {
+                    e.printStackTrace();
+                }
+            }
+            writer.endObject();
+            writer.endObject();
+        }
+        writer.endArray();
+
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
+     *            application id
+     * @param key
+     *            key field name
+     * @param record
+     *            updated record
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdateByKey(long app, String key, Record record)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        if (record.hasRevision()) {
+            writer.name("revision").value(record.getRevision());
+        }
+        writer.name("updateKey");
+        writer.beginObject();
+        writer.name("field").value(key);
+        writeFieldValue(writer, record.getField(key));
+        writer.endObject();
+        
+        writer.name("record");
+        writer.beginObject();
+        for (String fieldName : record.getFieldNames()) {
+        	if (fieldName == key) continue;
+        	
+            Field field = record.getField(fieldName);
+            try {
+                writeField(writer, field);
+            } catch (TypeMismatchException e) {
+                e.printStackTrace();
+            }
+        }
+        writer.endObject();
+        
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string for update method.
+     * @param app
+     *            application id
+     * @param key
+     *            key field name
+     * @param records
+     *            an array of the updated records
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String recordsToJsonForUpdateByKey(long app, String key, List<Record> records)
+            throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("records");
+
+        writer.beginArray();
+        for (Record record : records) {
+            writer.beginObject();
+            if (record.hasRevision()) {
+                writer.name("revision").value(record.getRevision());
+            }
+            writer.name("updateKey");
+            writer.beginObject();
+            writer.name("field").value(key);
+            writeFieldValue(writer, record.getField(key));
+            writer.endObject();
+            
+            writer.name("record");
+            writer.beginObject();
+            for (String fieldName : record.getFieldNames()) {
+            	if (fieldName == key) continue;
+            	
                 Field field = record.getField(fieldName);
                 try {
                     writeField(writer, field);
@@ -635,6 +801,44 @@ public class JsonParser {
     }
     
     /**
+     * Retrieves the revision string from json string.
+     * @param json
+     *            a json string
+     * @return the revision number
+     * @throws IOException
+     */
+    public long jsonToRevision(String json) throws IOException {
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        String revision = null;
+        if (root.isJsonObject()) {
+        	revision = root.getAsJsonObject().get("revision").getAsString();
+        }
+        
+        return Long.valueOf(revision);
+    }
+    
+    /**
+     * Retrieves the id string from json string.
+     * @param json
+     *            a json string
+     * @return the id number
+     * @throws IOException
+     */
+    public long jsonToId(String json) throws IOException {
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        String id = null;
+        if (root.isJsonObject()) {
+        	id = root.getAsJsonObject().get("id").getAsString();
+        }
+        
+        return Long.valueOf(id);
+    }
+    
+    /**
      * Convert json string to AppDto.
      * @param json
      *            a json string
@@ -675,5 +879,278 @@ public class JsonParser {
         Gson gson = new Gson();
 
         return gson.fromJson(apps, collectionType);
+    }
+    
+    /**
+     * Generates the json string to update assignees.
+     * @param id
+     *            record id
+     * @param code
+     *            array of the code of the assigned users
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForUpdateAssignees(long app, long id, List<String> codes, long revision) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("id").value(id);
+        
+        
+        writer.name("assignees");
+        writer.beginArray();
+        for (String code : codes) {
+            writer.value(code);
+        }
+        writer.endArray();
+        
+        if (revision >= 0) {
+        	writer.name("revision").value(revision);
+        }
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to update status.
+     * @param app
+     *            application id
+     * @param id
+     *            record id
+     * @param action
+     *            action name
+     * @param assignee
+     *            login name of the assignee
+     * @param revision
+     *            revision number (-1 means "not set")
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForUpdateStatus(long app, long id, String action, String assignee, long revision) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("id").value(id);
+        writer.name("action").value(action);
+        if (assignee != null) {
+        	writer.name("assignee").value(assignee);
+        }
+        
+        if (revision >= 0) {
+        	writer.name("revision").value(revision);
+        }
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to update status(for bulk updating).
+     * @param app
+     *            application id
+     * @param ids
+     *            an array of the record id
+     * @param actions
+     *            an array of the action name
+     * @param assignees
+     *            an array of the login name of the assignee
+     * @param revision
+     *            an array of the revision number (-1 means "not set")
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForUpdateStatus(long app,  List<Long> ids, List<String> actions, List<String> assignees, List<Long> revisions) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        
+        int size = ids.size();
+        writer.name("records");
+        writer.beginArray();
+        for (int i = 0; i < size; i++) {
+        	writer.beginObject();
+        	writer.name("id").value(ids.get(i));
+            writer.name("action").value(actions.get(i));
+            if (assignees.get(i) != null) {
+            	writer.name("assignee").value(assignees.get(i));
+            }
+            
+            if (revisions.get(i) >= 0) {
+            	writer.name("revision").value(revisions.get(i));
+            }
+        	writer.endObject();
+        }
+        writer.endArray();
+        
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to add comment.
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param mentions
+     *            an array of mentions
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForAddComment(long app, long record, String text, List<MentionDto> mentions) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("record").value(record);
+        
+        writer.name("comment");
+        writer.beginObject();
+        
+        writer.name("text").value(text);
+        
+        writer.name("mentions");
+        writer.beginArray();
+        for (MentionDto mention: mentions) {
+        	writer.beginObject();
+        	writer.name("code").value(mention.getCode());
+        	writer.name("type").value(mention.getType());
+        	writer.endObject();
+        }
+        writer.endArray();
+        writer.endObject();
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Generates the json string to delete comment.
+     * @param app
+     *            application id
+     * @param record
+     *            record id
+     * @param id
+     *            comment id
+     * @return
+     *        json string
+     * @throws IOException
+     */
+    public String generateForDeleteComment(long app, long record, long id) 
+    throws IOException {
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        JsonWriter writer = new JsonWriter(new OutputStreamWriter(baos));
+
+        writer.beginObject();
+        writer.name("app").value(app);
+        writer.name("record").value(record);
+        writer.name("comment").value(id);
+        writer.endObject();
+
+        writer.close();
+        return new String(baos.toByteArray());
+    }
+    
+    /**
+     * Converts the json string to the commentset object.
+     * @param json
+     *            a json string
+     * @return commentset object
+     * @throws IOException
+     */
+    public CommentSet jsonToCommentSet(Connection con, String json)
+            throws IOException {
+
+        CommentSet cs = new CommentSet();
+        com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
+        JsonElement root = parser.parse(json);
+        
+        if (root.isJsonObject()) {
+        	JsonObject obj = root.getAsJsonObject();
+            JsonArray comments = obj.get("comments").getAsJsonArray();
+            for (JsonElement elem: comments) {
+                Comment comment = readComment(elem);
+                if (comment != null) {
+                    cs.add(comment);
+                }
+            }
+            
+            cs.setNewer(obj.get("newer").getAsBoolean());
+            cs.setOlder(obj.get("older").getAsBoolean());
+        }
+        return cs;
+    }
+    
+    private Date getDateTime(String strDate) {
+        if (strDate == null || strDate.isEmpty())
+            return null;
+        try {
+            DateFormat df;
+            if (strDate.indexOf('.') > 0) {
+            	df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.000'Z'");
+            } else {
+            	df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");            	
+            }
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return df.parse(strDate);
+        } catch (ParseException e) {
+            throw new TypeMismatchException();
+        }
+    }
+    /**
+     * Reads and parses each comment element.
+     * @param elem
+     *            a json element represents a comment object
+     * @return the comment object created
+     * @throws IOException
+     */
+    private Comment readComment(JsonElement elem) throws IOException {
+
+        Comment comment = null;
+        Gson gson = new Gson();
+
+        if (elem.isJsonObject()) {
+            JsonObject obj = elem.getAsJsonObject();
+            long id = obj.get("id").getAsLong();
+            String text = obj.get("text").getAsString();
+            Date createdAt = getDateTime(obj.get("createdAt").getAsString());
+            
+            Type userElementType = new TypeToken<UserDto>() {
+            }.getType();
+            
+            UserDto user = gson.fromJson(obj.getAsJsonObject("creator"), userElementType);
+                       
+            Type mentionsElementType = new TypeToken<Collection<MentionDto>>() {
+            }.getType();
+            
+            List<MentionDto> mentions = gson.fromJson(obj.getAsJsonArray("mentions"), mentionsElementType);
+            
+            comment = new Comment(id, text, createdAt, user, mentions);
+        }
+
+        return comment;
     }
 } 

@@ -55,7 +55,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import sun.misc.BASE64Encoder;
+import java.util.Base64;
 
 import com.cybozu.kintone.database.exception.DBException;
 import com.cybozu.kintone.database.exception.DBNotFoundException;
@@ -106,8 +106,7 @@ public class Connection {
         this.trustAllHosts = false;
         this.useClientCert = false;
         this.domain = domain;
-        this.auth = (new BASE64Encoder()).encode((login + ":" + password)
-                .getBytes());
+        this.auth = Base64.getEncoder().encodeToString((login + ":" + password).getBytes());
         this.apiToken = null;
     }
     

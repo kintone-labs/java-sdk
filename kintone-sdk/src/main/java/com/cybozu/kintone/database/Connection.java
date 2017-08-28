@@ -758,7 +758,7 @@ public class Connection {
      */
     public ResultSet selectWithTotalCount(long app, String query, String[] columns)
             throws DBException {
-    	return select(app, query, columns, false);
+    	return select(app, query, columns, true);
     }
     
     /**

@@ -1,6 +1,6 @@
 # kintone SDK for Java
 
-version 0.8
+version 0.8.1
 
 ## Requirements
 

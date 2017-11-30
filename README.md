@@ -24,7 +24,7 @@ See developer site for more details.
 ## Build .jar file
 
     $ cd kintone-sdk
-    $ mvn clean compile jar:jar
+    $ mvn clean compile assembly:single
 
 ## Release Notes
 

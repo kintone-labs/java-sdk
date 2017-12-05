@@ -375,18 +375,18 @@ public class Connection {
     }
     
     /**
-	 * Get pom.properties
-	 * @return pom properties
-	 */
+     * Get pom.properties
+     * @return pom properties
+     */
 	public Properties getProperties() {
         Properties properties = new Properties();
-    	InputStream inStream = null;
+        InputStream inStream = null;
         try {
             inStream = this.getClass().getResourceAsStream("/pom.properties");
             properties.load(inStream);
-		} catch (IOException e) {
-		    e.printStackTrace();
-		} finally {
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
             if (inStream != null) {
                 try {
                     inStream.close();
@@ -399,7 +399,7 @@ public class Connection {
         return properties;
         
     }
-
+    
     /**
      * Sets user defined HTTP headers.
      * @param conn connection object

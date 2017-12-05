@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
@@ -76,7 +77,7 @@ public class Connection {
     
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
     private final String USER_AGENT_KEY = "User-Agent";
-    private final String USER_AGENT_VALUE = "kintone-SDK 1.0";
+    private final String USER_AGENT_VALUE = "kintone-java-SDK";
     
     private final String SSL_KEY_STORE = "javax.net.ssl.keyStore";
     private final String SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
@@ -228,7 +229,7 @@ public class Connection {
      */
     public void addHeader(String name, String value) {
         if (name.equalsIgnoreCase(USER_AGENT_KEY)) {
-            userAgent += " " + value;
+        	userAgent += "-" + value.replace(' ', '-');
         } else {
             headers.put(name, value);
         }
@@ -372,6 +373,32 @@ public class Connection {
             throws DBException {
         return request(method, api, body, null);
     }
+    
+    /**
+	 * Get pom.properties
+	 * @return pom properties
+	 */
+	public Properties getproperties() {
+    	final Properties properties = new Properties();
+    	InputStream inStream = null;
+        try {
+        	inStream = this.getClass().getResourceAsStream("/pom.properties");
+        	properties.load(inStream);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+            if (inStream != null) {
+                try {
+                    inStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        return properties;
+        
+    }
 
     /**
      * Sets user defined HTTP headers.
@@ -383,6 +410,7 @@ public class Connection {
         } else {
             conn.setRequestProperty(AUTH_HEADER, this.auth);
         }
+        this.userAgent += "/" + getproperties().getProperty("version");
         conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
         for (String header : this.headers.keySet()) {
             conn.setRequestProperty(header, this.headers.get(header));

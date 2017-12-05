@@ -229,7 +229,7 @@ public class Connection {
      */
     public void addHeader(String name, String value) {
         if (name.equalsIgnoreCase(USER_AGENT_KEY)) {
-        	userAgent += "-" + value.replace(' ', '-');
+            userAgent += "-" + value.replace(' ', '-');
         } else {
             headers.put(name, value);
         }
@@ -378,14 +378,14 @@ public class Connection {
 	 * Get pom.properties
 	 * @return pom properties
 	 */
-	public Properties getproperties() {
+	public Properties getProperties() {
     	final Properties properties = new Properties();
     	InputStream inStream = null;
         try {
-        	inStream = this.getClass().getResourceAsStream("/pom.properties");
-        	properties.load(inStream);
+            inStream = this.getClass().getResourceAsStream("/pom.properties");
+            properties.load(inStream);
 		} catch (IOException e) {
-			e.printStackTrace();
+		    e.printStackTrace();
 		} finally {
             if (inStream != null) {
                 try {
@@ -410,7 +410,7 @@ public class Connection {
         } else {
             conn.setRequestProperty(AUTH_HEADER, this.auth);
         }
-        this.userAgent += "/" + getproperties().getProperty("version");
+        this.userAgent += "/" + getProperties().getProperty("version");
         conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
         for (String header : this.headers.keySet()) {
             conn.setRequestProperty(header, this.headers.get(header));

@@ -379,7 +379,7 @@ public class Connection {
 	 * @return pom properties
 	 */
 	public Properties getProperties() {
-    	final Properties properties = new Properties();
+        Properties properties = new Properties();
     	InputStream inStream = null;
         try {
             inStream = this.getClass().getResourceAsStream("/pom.properties");

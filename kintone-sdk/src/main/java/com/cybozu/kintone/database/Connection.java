@@ -109,6 +109,7 @@ public class Connection {
         this.domain = domain;
         this.auth = Base64.getEncoder().encodeToString((login + ":" + password).getBytes());
         this.apiToken = null;
+        this.userAgent += "/" + getProperties().getProperty("version");
     }
     
     /**
@@ -126,6 +127,7 @@ public class Connection {
         this.domain = domain;
         this.auth = null;
         this.apiToken = apiToken;
+        this.userAgent += "/" + getProperties().getProperty("version");
     }
 
     /**
@@ -229,7 +231,7 @@ public class Connection {
      */
     public void addHeader(String name, String value) {
         if (name.equalsIgnoreCase(USER_AGENT_KEY)) {
-            userAgent += "-" + value.replace(' ', '-');
+            userAgent += " " + value;
         } else {
             headers.put(name, value);
         }
@@ -409,7 +411,6 @@ public class Connection {
         } else {
             conn.setRequestProperty(AUTH_HEADER, this.auth);
         }
-        this.userAgent += "/" + getProperties().getProperty("version");
         conn.setRequestProperty(USER_AGENT_KEY, this.userAgent);
         for (String header : this.headers.keySet()) {
             conn.setRequestProperty(header, this.headers.get(header));

@@ -378,7 +378,7 @@ public class Connection {
      * Get pom.properties
      * @return pom properties
      */
-	public Properties getProperties() {
+    public Properties getProperties() {
         Properties properties = new Properties();
         InputStream inStream = null;
         try {
@@ -397,7 +397,6 @@ public class Connection {
         }
         
         return properties;
-        
     }
     
     /**

@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
@@ -76,7 +77,7 @@ public class Connection {
     
     private final String BOUNDARY = "boundary_aj8gksdnsdfakj342fs3dt3stk8g6j32";
     private final String USER_AGENT_KEY = "User-Agent";
-    private final String USER_AGENT_VALUE = "kintone-SDK 1.0";
+    private final String USER_AGENT_VALUE = "kintone-java-SDK";
     
     private final String SSL_KEY_STORE = "javax.net.ssl.keyStore";
     private final String SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
@@ -108,6 +109,7 @@ public class Connection {
         this.domain = domain;
         this.auth = Base64.getEncoder().encodeToString((login + ":" + password).getBytes());
         this.apiToken = null;
+        this.userAgent += "/" + getProperties().getProperty("version");
     }
     
     /**
@@ -125,6 +127,7 @@ public class Connection {
         this.domain = domain;
         this.auth = null;
         this.apiToken = apiToken;
+        this.userAgent += "/" + getProperties().getProperty("version");
     }
 
     /**
@@ -372,7 +375,32 @@ public class Connection {
             throws DBException {
         return request(method, api, body, null);
     }
-
+    
+    /**
+     * Get pom.properties
+     * @return pom properties
+     */
+    public Properties getProperties() {
+        Properties properties = new Properties();
+        InputStream inStream = null;
+        try {
+            inStream = this.getClass().getResourceAsStream("/pom.properties");
+            properties.load(inStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (inStream != null) {
+                try {
+                    inStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        return properties;
+    }
+    
     /**
      * Sets user defined HTTP headers.
      * @param conn connection object

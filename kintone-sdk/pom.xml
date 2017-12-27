@@ -7,16 +7,6 @@
   <version>0.8.2</version>
   <name>kintone-sdk</name>
   <url>http://maven.apache.org</url>
-  <build>
-      <resources>
-        <resource>
-          <directory>src/main/resources/</directory>
-          <filtering>true</filtering>
-        </resource>
-      </resources>   
-      <plugins>
-      </plugins>
-    </build> 
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -34,8 +24,16 @@
   </dependencies>
   <properties>
     <skipTests>true</skipTests>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
   <build>
+   <resources>
+        <resource>
+          <directory>src/main/resources/</directory>
+          <filtering>true</filtering>
+        </resource>
+    </resources> 
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -46,6 +44,6 @@
           </descriptorRefs>
         </configuration>
       </plugin>
-    </plugins>
+    </plugins> 
   </build>
 </project>

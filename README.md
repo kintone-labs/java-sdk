@@ -1,7 +1,7 @@
 # kintone SDK for Java (Deprecated)
 
-## This sdk has been deprecated. Please use 
-[kintone-java-sdk](https://github.com/kintone/kintone-java-sdk)
+## This sdk has been deprecated. Please use [kintone-java-sdk](https://github.com/kintone/kintone-java-sdk)
+
 -----
 
 version 0.8.2

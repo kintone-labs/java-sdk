@@ -1,6 +1,6 @@
 # kintone SDK for Java (Deprecated)
 
-## This sdk has been deprecated. Please use [kintone-java-sdk](https://github.com/kintone/kintone-java-sdk)
+## This sdk has been deprecated. Please use [kintone-java-client](https://github.com/kintone/kintone-java-client)
 
 -----
 
@@ -32,4 +32,4 @@ See developer site for more details.
 
 ## Release Notes
 
-See https://github.com/kintone/java-sdk/releases
+See https://github.com/kintone-labs/java-sdk/releases
